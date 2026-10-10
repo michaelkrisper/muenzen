@@ -1,0 +1,7 @@
+# Nur für Ruff: tools/make-fixture.py ist das einzige Python im Repo.
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]

@@ -55,10 +55,14 @@ function sizeCost(c, coin, s) {
 }
 
 function best(c, probs, s) {
-  let bestCoin = null, bestCost = Infinity;
+  let bestCoin = null,
+    bestCost = Infinity;
   for (const coin of COINS) {
     const k = -Math.log(probs[coin.metal]) + sizeCost(c, coin, s);
-    if (k < bestCost) { bestCost = k; bestCoin = coin; }
+    if (k < bestCost) {
+      bestCost = k;
+      bestCoin = coin;
+    }
   }
   return { coin: bestCoin, cost: bestCost };
 }
@@ -67,72 +71,94 @@ function best(c, probs, s) {
 const MIN_COINS_FOR_TILT = 6;
 const TILT_SIGMA = 0.15;
 
+// Mittelpunkt und halbe Ausdehnung der Münzen, Bezug für die Neigung.
+function extent(coins) {
+  const xs = coins.map((c) => c.x);
+  const ys = coins.map((c) => c.y);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, span: Math.max(x1 - x0, y1 - y0, 1) / 2 };
+}
+
+// Metallwahrscheinlichkeiten aller Münzen; die Bimetall-Schwelle hängt von
+// der typischen Wärme der gemessenen Münzen im Bild ab.
+function colorProbs(coins, measured) {
+  const warmths = measured.map((c) => Math.max(warmth(c.inner), warmth(c.outer))).sort((a, b) => a - b);
+  const typical = warmths[warmths.length >> 1] ?? 0;
+  const uniform = { copper: 1, gold: 1, bi1: 1, bi2: 1 };
+  return coins.map((c) => (c.inner ? metalProbs(c, typical) : uniform));
+}
+
+// Bestes Maßstabsfeld aus einer Kandidatenliste; liefert alle Bewertungen mit.
+function minimize(fields, cost) {
+  let best = null;
+  const tried = fields.map((f) => {
+    const t = cost(f);
+    if (!best || t < best.t) best = { f, t };
+    return { f, t };
+  });
+  return { field: best.f, total: best.t, tried };
+}
+
+const range = (from, to, step) =>
+  Array.from({ length: Math.round((to - from) / step) + 1 }, (_, k) => from + k * step);
+
 // coins: [{x, y, r, inner, outer}], fixed: [id|null] vom Benutzer festgelegte Sorten.
 function classify(coins, fixed = []) {
   if (!coins.length) return { labels: [], field: null, total: 0, ambiguous: false };
   // Von Hand hinzugefügte Münzen haben weder Farbe noch echten Radius.
   const measured = coins.filter((c) => c.inner);
-  const warmths = measured.map((c) => Math.max(warmth(c.inner), warmth(c.outer))).sort((a, b) => a - b);
-  const typical = warmths[warmths.length >> 1] ?? 0;
-  const uniform = { copper: 1, gold: 1, bi1: 1, bi2: 1 };
-  const probs = coins.map((c) => (c.inner ? metalProbs(c, typical) : uniform));
-  const anchors = coins.map((c, i) => (fixed[i] && COIN_BY_ID[fixed[i]]) || null);
-
-  const xs = measured.map((c) => c.x), ys = measured.map((c) => c.y);
-  const base = {
-    cx: (Math.min(...xs) + Math.max(...xs)) / 2,
-    cy: (Math.min(...ys) + Math.max(...ys)) / 2,
-    span: Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1) / 2,
-  };
+  const probs = colorProbs(coins, measured);
+  const anchors = fixed.map((id) => COIN_BY_ID[id] ?? null);
+  const base = extent(measured);
 
   // Festgelegte Münzen zählen nur mit ihrer eigenen Sorte, dafür ohne Farbe.
-  const totalCost = (field) => coins.reduce((sum, c, i) => {
-    if (!c.inner) return sum;
-    const s = scaleAt(field, c);
-    return sum + (anchors[i] ? sizeCost(c, anchors[i], s) : best(c, probs[i], s).cost);
-  }, (field.gx ** 2 + field.gy ** 2) / (2 * TILT_SIGMA ** 2));
+  const totalCost = (field) =>
+    coins.reduce(
+      (sum, c, i) => {
+        if (!c.inner) return sum;
+        const s = scaleAt(field, c);
+        return sum + (anchors[i] ? sizeCost(c, anchors[i], s) : best(c, probs[i], s).cost);
+      },
+      (field.gx ** 2 + field.gy ** 2) / (2 * TILT_SIGMA ** 2),
+    );
+  const labelsAt = (f) =>
+    coins.map((c, i) => (anchors[i] ? anchors[i].id : best(c, probs[i], scaleAt(f, c)).coin.id));
+  const sum = (labels) => labels.reduce((acc, id) => acc + COIN_BY_ID[id].value, 0);
 
   // Jede Paarung Münze/Sorte liefert einen Kandidaten für den Maßstab.
-  const fixedIdx = anchors.map((a, i) => (a && coins[i].inner ? i : -1)).filter((i) => i >= 0);
+  const fixedIdx = coins.map((c, i) => (anchors[i] && c.inner ? i : -1)).filter((i) => i >= 0);
   const candidates = fixedIdx.length
     ? fixedIdx.map((i) => (2 * coins[i].r) / anchors[i].d)
     : measured.flatMap((c) => COINS.map((coin) => (2 * c.r) / coin.d));
   if (!candidates.length) candidates.push(1);
 
-  let field = { ...base, s: candidates[0], gx: 0, gy: 0 }, bestTotal = Infinity;
-  const tried = [];
-  for (const s0 of candidates) {
-    for (let k = -3; k <= 3; k++) {
-      const f = { ...base, s: s0 * (1 + k * 0.01), gx: 0, gy: 0 };
-      const t = totalCost(f);
-      tried.push({ f, t });
-      if (t < bestTotal) { bestTotal = t; field = f; }
-    }
-  }
+  const flat = minimize(
+    candidates.flatMap((s0) =>
+      range(-3, 3, 1).map((k) => ({ ...base, s: s0 * (1 + k * 0.01), gx: 0, gy: 0 })),
+    ),
+    totalCost,
+  );
 
   // Passt ein deutlich anderer Maßstab fast genauso gut und ergibt einen
   // anderen Betrag, lässt sich die Größe nicht bestimmen (z. B. nur
   // gleich große Messingmünzen). Dann muss der Benutzer eine festlegen.
-  const labelsAt = (f) => coins.map((c, i) => anchors[i] ? anchors[i].id : best(c, probs[i], scaleAt(f, c)).coin.id);
-  const sum = (labels) => labels.reduce((acc, id) => acc + COIN_BY_ID[id].value, 0);
-  let ambiguous = false;
-  if (!fixedIdx.length) {
-    const flatTotal = sum(labelsAt(field));
-    ambiguous = tried.some(({ f, t }) => Math.abs(f.s / field.s - 1) > 0.07 && t - bestTotal < 2
-      && sum(labelsAt(f)) !== flatTotal);
-  }
+  const flatSum = sum(labelsAt(flat.field));
+  const ambiguous =
+    !fixedIdx.length &&
+    flat.tried.some(
+      ({ f, t }) =>
+        Math.abs(f.s / flat.field.s - 1) > 0.07 && t - flat.total < 2 && sum(labelsAt(f)) !== flatSum,
+    );
 
+  let field = flat.field;
   if (measured.length >= MIN_COINS_FOR_TILT) {
-    const flat = field;
-    for (let gx = -0.3; gx <= 0.301; gx += 0.05) {
-      for (let gy = -0.3; gy <= 0.301; gy += 0.05) {
-        for (let k = -6; k <= 6; k++) {
-          const f = { ...base, s: flat.s * (1 + k * 0.01), gx, gy };
-          const t = totalCost(f);
-          if (t < bestTotal) { bestTotal = t; field = f; }
-        }
-      }
-    }
+    const tilts = range(-0.3, 0.3, 0.05).flatMap((gx) =>
+      range(-0.3, 0.3, 0.05).flatMap((gy) =>
+        range(-6, 6, 1).map((k) => ({ ...base, s: flat.field.s * (1 + k * 0.01), gx, gy })),
+      ),
+    );
+    const tilted = minimize(tilts, totalCost);
+    if (tilted.total < flat.total) field = tilted.field;
   }
 
   const labels = labelsAt(field);

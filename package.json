@@ -1,0 +1,28 @@
+{
+  "name": "muenzen",
+  "version": "1.0.0",
+  "description": "Euro-Münzen per Foto zählen: Anzahl und Gesamtwert, als installierbare Web-App direkt im Browser",
+  "homepage": "https://michaelkrisper.github.io/muenzen/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michaelkrisper/muenzen.git"
+  },
+  "bugs": "https://github.com/michaelkrisper/muenzen/issues",
+  "author": "Michael Krisper",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "node tests/browser-check.mjs tests/fixtures/coins.jpg 20 1106",
+    "check": "npm run lint && npm test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15"
+  }
+}

@@ -1,6 +1,6 @@
 // Alles vorab zwischenspeichern; die App braucht danach kein Netz mehr.
 // Bei jeder Änderung an einer der Dateien VERSION hochzählen.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const FILES = [
   './',
   'index.html',
@@ -17,13 +17,21 @@ const FILES = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches
+      .open(VERSION)
+      .then((c) => c.addAll(FILES))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys()
-    .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
-    .then(() => self.clients.claim()));
+  e.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
+  );
 });
 
 self.addEventListener('fetch', (e) => {

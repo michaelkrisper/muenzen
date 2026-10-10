@@ -9,6 +9,10 @@ const WORK_SIZE = 1000;
 // schwächere verworfen wird. Münzen liegen nebeneinander, nicht übereinander.
 const MAX_OVERLAP = 0.35;
 
+// Obere Canny-Schwelle. Der OpenCV-Vorschlag für HOUGH_GRADIENT_ALT (300)
+// übersieht silberne Münzen auf hellem Grund; 100 war auf den Testfotos am besten.
+const CANNY_HIGH = 100;
+
 function detectCoins(cv, image, opts = {}) {
   const sensitivity = opts.sensitivity ?? 0.5;
   const scale = Math.min(1, WORK_SIZE / Math.max(image.width, image.height));
@@ -29,8 +33,17 @@ function detectCoins(cv, image, opts = {}) {
   const circlesMat = new cv.Mat();
   // HOUGH_GRADIENT_ALT: param2 ist die geforderte Kreisförmigkeit (0..1).
   const perfectness = 0.92 - 0.2 * sensitivity;
-  cv.HoughCircles(gray, circlesMat, cv.HOUGH_GRADIENT_ALT, 1.5, minDim * 0.03,
-    300, perfectness, Math.round(minDim * 0.025), Math.round(minDim * 0.35));
+  cv.HoughCircles(
+    gray,
+    circlesMat,
+    cv.HOUGH_GRADIENT_ALT,
+    1.5,
+    minDim * 0.03,
+    CANNY_HIGH,
+    perfectness,
+    Math.round(minDim * 0.025),
+    Math.round(minDim * 0.35),
+  );
 
   let circles = [];
   for (let i = 0; i < circlesMat.cols; i++) {
@@ -39,7 +52,8 @@ function detectCoins(cv, image, opts = {}) {
   }
   circlesMat.delete();
 
-  const gx = new cv.Mat(), gy = new cv.Mat();
+  const gx = new cv.Mat(),
+    gy = new cv.Mat();
   cv.Sobel(gray, gx, cv.CV_32F, 1, 0, 3);
   cv.Sobel(gray, gy, cv.CV_32F, 0, 1, 3);
   gray.delete();
@@ -83,17 +97,24 @@ function removeOverlaps(circles) {
 function refineCircle(gx, gy, c) {
   const n = 90;
   const pts = [];
-  const W = gx.cols, H = gx.rows;
+  const W = gx.cols,
+    H = gx.rows;
   for (let k = 0; k < n; k++) {
     const t = (2 * Math.PI * k) / n;
-    const ux = Math.cos(t), uy = Math.sin(t);
-    let bestG = 0, bestR = 0;
+    const ux = Math.cos(t),
+      uy = Math.sin(t);
+    let bestG = 0,
+      bestR = 0;
     for (let rr = c.r * 0.8; rr <= c.r * 1.2; rr += 0.5) {
-      const x = Math.round(c.x + ux * rr), y = Math.round(c.y + uy * rr);
+      const x = Math.round(c.x + ux * rr),
+        y = Math.round(c.y + uy * rr);
       if (x < 0 || y < 0 || x >= W || y >= H) break;
       const i = y * W + x;
       const g = Math.abs(gx.data32F[i] * ux + gy.data32F[i] * uy);
-      if (g > bestG) { bestG = g; bestR = rr; }
+      if (g > bestG) {
+        bestG = g;
+        bestR = rr;
+      }
     }
     if (bestG > 0) pts.push({ x: c.x + ux * bestR, y: c.y + uy * bestR, g: bestG });
   }
@@ -106,7 +127,7 @@ function refineCircle(gx, gy, c) {
   if (!fit) return c;
   const res = use.map((p) => Math.abs(Math.hypot(p.x - fit.x, p.y - fit.y) - fit.r));
   const resMed = median(res);
-  use = use.filter((p, i) => res[i] <= Math.max(1.5, resMed * 2.5));
+  use = use.filter((_p, i) => res[i] <= Math.max(1.5, resMed * 2.5));
   fit = use.length >= n / 3 ? fitCircle(use) : null;
   if (!fit) return c;
   if (Math.abs(fit.r - c.r) > c.r * 0.2 || Math.hypot(fit.x - c.x, fit.y - c.y) > c.r * 0.2) return c;
@@ -116,30 +137,54 @@ function refineCircle(gx, gy, c) {
 // Algebraischer Kreisausgleich (Kåsa): x² + y² + Dx + Ey + F = 0.
 function fitCircle(pts) {
   if (pts.length < 3) return null;
-  let mx = 0, my = 0;
-  for (const p of pts) { mx += p.x; my += p.y; }
-  mx /= pts.length; my /= pts.length;
-  let suu = 0, svv = 0, suv = 0, suuu = 0, svvv = 0, suvv = 0, svuu = 0;
+  let mx = 0,
+    my = 0;
   for (const p of pts) {
-    const u = p.x - mx, v = p.y - my;
-    suu += u * u; svv += v * v; suv += u * v;
-    suuu += u * u * u; svvv += v * v * v; suvv += u * v * v; svuu += v * u * u;
+    mx += p.x;
+    my += p.y;
+  }
+  mx /= pts.length;
+  my /= pts.length;
+  let suu = 0,
+    svv = 0,
+    suv = 0,
+    suuu = 0,
+    svvv = 0,
+    suvv = 0,
+    svuu = 0;
+  for (const p of pts) {
+    const u = p.x - mx,
+      v = p.y - my;
+    suu += u * u;
+    svv += v * v;
+    suv += u * v;
+    suuu += u * u * u;
+    svvv += v * v * v;
+    suvv += u * v * v;
+    svuu += v * u * u;
   }
   const det = suu * svv - suv * suv;
   if (Math.abs(det) < 1e-9) return null;
-  const a = (suuu + suvv) / 2, b = (svvv + svuu) / 2;
-  const uc = (a * svv - b * suv) / det, vc = (b * suu - a * suv) / det;
+  const a = (suuu + suvv) / 2,
+    b = (svvv + svuu) / 2;
+  const uc = (a * svv - b * suv) / det,
+    vc = (b * suu - a * suv) / det;
   return { x: uc + mx, y: vc + my, r: Math.sqrt(uc * uc + vc * vc + (suu + svv) / pts.length) };
 }
 
 // Median von L, a, b im Ring zwischen r0 und r1 (Anteile des Radius).
 // Median statt Mittelwert, weil Glanzlichter sonst die Farbe ausbleichen.
 function sampleLab(lab, c, r0, r1) {
-  const L = [], A = [], B = [];
-  const rOut = c.r * r1, rIn = c.r * r0;
+  const L = [],
+    A = [],
+    B = [];
+  const rOut = c.r * r1,
+    rIn = c.r * r0;
   const step = Math.max(1, Math.floor(c.r / 25));
-  const x0 = Math.max(0, Math.floor(c.x - rOut)), x1 = Math.min(lab.cols - 1, Math.ceil(c.x + rOut));
-  const y0 = Math.max(0, Math.floor(c.y - rOut)), y1 = Math.min(lab.rows - 1, Math.ceil(c.y + rOut));
+  const x0 = Math.max(0, Math.floor(c.x - rOut)),
+    x1 = Math.min(lab.cols - 1, Math.ceil(c.x + rOut));
+  const y0 = Math.max(0, Math.floor(c.y - rOut)),
+    y1 = Math.min(lab.rows - 1, Math.ceil(c.y + rOut));
   const data = lab.data;
   for (let y = y0; y <= y1; y += step) {
     for (let x = x0; x <= x1; x += step) {

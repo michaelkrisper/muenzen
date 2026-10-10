@@ -1,0 +1,26 @@
+name: Falsch erkannt
+description: Münzen wurden nicht gefunden oder falsch eingeordnet
+labels: [erkennung]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke! Ein Beispielfoto hilft am meisten. Bitte nur Fotos anhängen,
+        die du selbst gemacht hast; sie werden hier öffentlich.
+  - type: textarea
+    id: was
+    attributes:
+      label: Was ist passiert?
+      description: z. B. „2-Euro-Münze als 50 Cent erkannt“ oder „drei Münzen fehlen“
+    validations:
+      required: true
+  - type: textarea
+    id: foto
+    attributes:
+      label: Foto
+      description: Hierher ziehen oder einfügen.
+  - type: input
+    id: geraet
+    attributes:
+      label: Gerät und Browser
+      placeholder: Pixel 9, Chrome 152

@@ -17,8 +17,8 @@ const euro = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR'
 
 const state = {
   bitmap: null,
-  coins: [],   // { x, y, r, inner, outer } in Bildpunkten des Anzeigebilds
-  fixed: [],   // vom Benutzer gewählte Sorte je Münze oder null
+  coins: [], // { x, y, r, inner, outer } in Bildpunkten des Anzeigebilds
+  fixed: [], // vom Benutzer gewählte Sorte je Münze oder null
   labels: [],
   adding: false,
   ambiguous: false,
@@ -75,7 +75,8 @@ async function loadPhoto(file) {
     return;
   }
   const scale = Math.min(1, DISPLAY_SIZE / Math.max(bitmap.width, bitmap.height));
-  const w = Math.round(bitmap.width * scale), h = Math.round(bitmap.height * scale);
+  const w = Math.round(bitmap.width * scale),
+    h = Math.round(bitmap.height * scale);
   const canvas = new OffscreenCanvas(w, h);
   canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
   bitmap.close();
@@ -195,8 +196,9 @@ function showHint() {
   hint.classList.toggle('warn', !state.adding && state.ambiguous);
   if (state.adding) hint.textContent = 'Tippe auf die Stelle, an der eine Münze fehlt.';
   else if (state.ambiguous) {
-    hint.textContent = 'Die Größe ist nicht eindeutig, weil die Münzen zu ähnlich sind. '
-      + 'Tippe eine Münze an und wähle ihre Sorte, die übrigen passen sich an.';
+    hint.textContent =
+      'Die Größe ist nicht eindeutig, weil die Münzen zu ähnlich sind. ' +
+      'Tippe eine Münze an und wähle ihre Sorte, die übrigen passen sich an.';
   } else hint.textContent = 'Münze antippen, um die Sorte zu ändern oder sie zu entfernen.';
 }
 
@@ -211,7 +213,9 @@ $('photo').addEventListener('click', async (e) => {
   if (state.adding) {
     setAdding(false);
     const radii = state.coins.map((c) => c.r).sort((a, b) => a - b);
-    const r = radii.length ? radii[radii.length >> 1] : Math.min(state.bitmap.width, state.bitmap.height) * 0.06;
+    const r = radii.length
+      ? radii[radii.length >> 1]
+      : Math.min(state.bitmap.width, state.bitmap.height) * 0.06;
     state.coins.push({ x, y, r, manual: true });
     state.fixed.push(null);
     const i = state.coins.length - 1;
@@ -222,10 +226,14 @@ $('photo').addEventListener('click', async (e) => {
   }
 
   // Nächstgelegene Münze, die den Punkt enthält (mit etwas Spielraum für Finger).
-  let hit = -1, bestD = Infinity;
+  let hit = -1,
+    bestD = Infinity;
   state.coins.forEach((c, i) => {
     const d = Math.hypot(c.x - x, c.y - y);
-    if (d < c.r * 1.15 && d < bestD) { bestD = d; hit = i; }
+    if (d < c.r * 1.15 && d < bestD) {
+      bestD = d;
+      hit = i;
+    }
   });
   if (hit < 0) return;
   const choice = await pick(hit);
@@ -259,15 +267,19 @@ function pick(i) {
   dialog.returnValue = 'cancel';
   dialog.showModal();
   return new Promise((resolve) => {
-    dialog.addEventListener('close', () => {
-      const v = dialog.returnValue || 'cancel';
-      if (COIN_BY_ID[v]) {
-        state.fixed[i] = v;
-        resolve('set');
-      } else {
-        resolve(v);
-      }
-    }, { once: true });
+    dialog.addEventListener(
+      'close',
+      () => {
+        const v = dialog.returnValue || 'cancel';
+        if (COIN_BY_ID[v]) {
+          state.fixed[i] = v;
+          resolve('set');
+        } else {
+          resolve(v);
+        }
+      },
+      { once: true },
+    );
   });
 }
 
@@ -280,16 +292,21 @@ $('picker').addEventListener('click', (e) => {
 
 $('share').addEventListener('click', async () => {
   const lines = [...$('rows').children].map((tr) =>
-    [...tr.children].map((td) => td.textContent.trim()).join(' '));
+    [...tr.children].map((td) => td.textContent.trim()).join(' '),
+  );
   const text = `${lines.join('\n')}\n= ${$('count').textContent}, ${$('sum').value}`;
   try {
     if (navigator.share) await navigator.share({ title: 'Münzzähler', text });
     else {
       await navigator.clipboard.writeText(text);
       $('share').textContent = 'Kopiert';
-      setTimeout(() => { $('share').textContent = 'Ergebnis teilen'; }, 1500);
+      setTimeout(() => {
+        $('share').textContent = 'Ergebnis teilen';
+      }, 1500);
     }
-  } catch { /* abgebrochen */ }
+  } catch {
+    /* abgebrochen */
+  }
 });
 
 // --- Offline ----------------------------------------------------------------

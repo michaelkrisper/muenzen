@@ -11,7 +11,7 @@ const ready = new Promise((resolve) => {
   postMessage({ type: 'ready' });
 });
 
-onmessage = async (e) => {
+self.onmessage = async (e) => {
   const { id, image, sensitivity } = e.data;
   await ready;
   try {

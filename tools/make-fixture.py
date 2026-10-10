@@ -5,6 +5,7 @@
 Gibt Anzahl und Betrag in Cent aus. Keine echten Fotos im Repo, weil deren
 Lizenz eine Namensnennung verlangt und sie für CI nicht nötig sind.
 """
+
 import subprocess
 import sys
 
@@ -49,7 +50,7 @@ def main():
                 placed.append((x, y, r, coin))
                 break
 
-    for x, y, r, (cid, d, core, outer, inner, _) in placed:
+    for x, y, r, (_id, _d, core, outer, inner, _value) in placed:
         dist = np.hypot(xx - x, yy - y)
         # Schatten leicht nach rechts unten.
         sd = np.hypot(xx - x - r * 0.06, yy - y - r * 0.08)
@@ -69,8 +70,11 @@ def main():
 
     img += rng.normal(0, 3, img.shape)
     data = np.clip(img, 0, 255).astype(np.uint8)
-    subprocess.run(["magick", "-size", f"{w}x{h}", "-depth", "8", "rgb:-", "-blur", "0x0.8",
-                    "-quality", "88", out], input=data.tobytes(), check=True)
+    subprocess.run(
+        ["magick", "-size", f"{w}x{h}", "-depth", "8", "rgb:-", "-blur", "0x0.8", "-quality", "88", out],
+        input=data.tobytes(),
+        check=True,
+    )
 
     ids = [c[3][0] for c in placed]
     cents = sum(c[3][5] for c in placed)
