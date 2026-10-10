@@ -1,0 +1,179 @@
+:root {
+  color-scheme: dark;
+  --bg: #1d2433;
+  --panel: #262f42;
+  --line: #3a4560;
+  --text: #eef1f7;
+  --muted: #a3adc2;
+  --accent: #f2c230;
+  --danger: #ff7a6b;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0 auto;
+  max-width: 760px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+header { padding: 1rem 1rem 0; }
+h1 { margin: 0; font-size: 1.4rem; }
+h1::before { content: "●"; color: var(--accent); margin-right: 0.4rem; }
+
+main { flex: 1; padding: 1rem; }
+
+footer {
+  padding: 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.tips {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 1rem 1rem 1rem 2.2rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+.tips li + li { margin-top: 0.5rem; }
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+.actions .btn { flex: 1 1 10rem; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.98); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #1d2433; }
+.btn.danger { color: var(--danger); }
+.btn[aria-pressed="true"] { background: var(--accent); color: #1d2433; }
+
+.status { color: var(--muted); text-align: center; font-size: 0.9rem; }
+
+.summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+#sum { font-size: 2.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+#count { color: var(--muted); font-size: 1.1rem; }
+
+.stage { position: relative; }
+#photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.busy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 20, 30, 0.6);
+  border-radius: 12px;
+  font-weight: 600;
+}
+.busy[hidden] { display: none; }
+
+.hint { color: var(--muted); font-size: 0.9rem; margin: 0.5rem 0 0.75rem; }
+.hint.warn { color: var(--accent); }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.slider {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.slider input { flex: 1; accent-color: var(--accent); }
+
+.breakdown {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.breakdown td { padding: 0.55rem 0.25rem; border-bottom: 1px solid var(--line); }
+.breakdown .num { text-align: right; white-space: nowrap; }
+.dot {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: var(--c);
+  margin-right: 0.6rem;
+  vertical-align: -0.05rem;
+}
+
+dialog {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 1.25rem;
+  width: min(26rem, calc(100vw - 2rem));
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+dialog h2 { margin: 0 0 1rem; font-size: 1.1rem; }
+.coins {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+.coin {
+  min-height: 3rem;
+  border: 2px solid var(--c);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.coin.current { background: var(--c); color: #1d2433; }
+.dialog-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+.dialog-actions .btn { flex: 1; min-height: 2.6rem; }
+.dialog-actions .btn[hidden] { display: none; }
