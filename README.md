@@ -37,7 +37,7 @@ Sorte und zeigt Anzahl und Gesamtwert, direkt im Browser und ohne Upload.
 4. Meldet die App, dass die Größe nicht eindeutig ist (etwa bei lauter
    10-Cent-Stücken), genügt es, eine Münze festzulegen.
 
-Auf dem Handy lässt sich die App über *Zum Startbildschirm hinzufügen*
+Auf dem Handy lässt sich die App über _Zum Startbildschirm hinzufügen_
 installieren.
 
 ## Wie es funktioniert
@@ -81,11 +81,11 @@ flowchart LR
 
 ### Genauigkeit
 
-| Testmaterial | Gefunden | Ergebnis |
-|---|---|---|
-| Künstliche Fotos ([`make-fixture.py`](tools/make-fixture.py), 7 Seeds, je 20 Münzen) | 140 / 140 | Betrag in allen 7 Fotos exakt |
-| Echte Fotos von Wikimedia Commons (2 Fotos, schräg, teils dicht gedrängt) | 33 / 35 | 24 von 25 bestimmbaren Münzen richtig |
-| Echte Fotos von Wikimedia Commons (6 Fotos, auf Hand, Geldbörse, Banknoten, Flagge) | 36 / 38, kein Fehltreffer | 32 von 34 richtig |
+| Testmaterial                                                                         | Gefunden                  | Ergebnis                              |
+| ------------------------------------------------------------------------------------ | ------------------------- | ------------------------------------- |
+| Künstliche Fotos ([`make-fixture.py`](tools/make-fixture.py), 7 Seeds, je 20 Münzen) | 140 / 140                 | Betrag in allen 7 Fotos exakt         |
+| Echte Fotos von Wikimedia Commons (2 Fotos, schräg, teils dicht gedrängt)            | 33 / 35                   | 24 von 25 bestimmbaren Münzen richtig |
+| Echte Fotos von Wikimedia Commons (6 Fotos, auf Hand, Geldbörse, Banknoten, Flagge)  | 36 / 38, kein Fehltreffer | 32 von 34 richtig                     |
 
 Grenzen: übereinanderliegende Haufen, starke Spiegelungen, sehr dunkle oder
 farbstichige Fotos und Münzen anderer Währungen.
@@ -117,15 +117,15 @@ npm ci
 npm run serve        # http://localhost:8080
 ```
 
-| Befehl | Zweck |
-|---|---|
-| `npm run lint` | Biome: Formatierung und Lint für JS, CSS, HTML und JSON |
-| `npm run lint:fix` | dasselbe mit automatischen Korrekturen |
-| `npm test` | Unit-Tests für Klassifikation und Kreiserkennung |
-| `npm run test:e2e` | Browsertest: Foto laden, Summe prüfen, Korrektur und Offline-Cache testen |
-| `node tools/try.js foto.jpg` | Erkennung auf eigenem Foto, schreibt `foto.out.jpg` mit Markierungen |
-| `node tools/eval.js truth.json` | Trefferquote gegen Sollwerte (`{"bild.jpg": [[x, y, "50c"], …]}`) |
-| `python3 tools/make-fixture.py out.jpg 7` | künstliches Testfoto, gibt Anzahl und Betrag aus |
+| Befehl                                    | Zweck                                                                     |
+| ----------------------------------------- | ------------------------------------------------------------------------- |
+| `npm run lint`                            | Biome: Formatierung und Lint für JS, CSS, HTML und JSON                   |
+| `npm run lint:fix`                        | dasselbe mit automatischen Korrekturen                                    |
+| `npm test`                                | Unit-Tests für Klassifikation und Kreiserkennung                          |
+| `npm run test:e2e`                        | Browsertest: Foto laden, Summe prüfen, Korrektur und Offline-Cache testen |
+| `node tools/try.js foto.jpg`              | Erkennung auf eigenem Foto, schreibt `foto.out.jpg` mit Markierungen      |
+| `node tools/eval.js truth.json`           | Trefferquote gegen Sollwerte (`{"bild.jpg": [[x, y, "50c"], …]}`)         |
+| `python3 tools/make-fixture.py out.jpg 7` | künstliches Testfoto, gibt Anzahl und Betrag aus                          |
 
 Die [CI](.github/workflows/ci.yml) führt Biome, Ruff, Unit-Tests und den
 Browsertest aus und veröffentlicht `main` danach auf GitHub Pages.
