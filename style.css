@@ -51,6 +51,23 @@ footer {
   text-align: center;
 }
 
+.viewfinder {
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+.viewfinder video {
+  display: block;
+  width: 100%;
+  max-height: 65dvh;
+  object-fit: cover;
+}
+/* Mit Sucher genügt der kurze Hinweis, der Platz gehört dem Bild. */
+.viewfinder:not([hidden]) + .tips li:not(:first-child) {
+  display: none;
+}
+
 .tips {
   background: var(--panel);
   border-radius: 12px;
@@ -165,18 +182,6 @@ footer {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-}
-.slider {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-.slider input {
-  flex: 1;
-  accent-color: var(--accent);
 }
 
 .breakdown {

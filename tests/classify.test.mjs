@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { describe, test } from 'node:test';
 
-const { classify, COINS, COIN_BY_ID } = createRequire(import.meta.url)('../classify.js');
+const { classify, dropNonCoins, COINS, COIN_BY_ID } = createRequire(import.meta.url)('../classify.js');
 
 // Typische Lab-Werte aus echten Fotos.
 const GOLD = { L: 60, a: 2, b: 30 };
@@ -26,7 +26,13 @@ const row = (ids, pxPerMm = 4) => ids.map((id, i) => coin(id, pxPerMm, i * 150))
 
 describe('classify', () => {
   test('leeres Bild', () => {
-    assert.deepEqual(classify([]), { labels: [], field: null, total: 0, ambiguous: false });
+    assert.deepEqual(classify([]), {
+      labels: [],
+      field: null,
+      total: 0,
+      ambiguous: false,
+      outliers: [],
+    });
   });
 
   test('erkennt alle acht Sorten nebeneinander', () => {
@@ -86,5 +92,26 @@ describe('classify', () => {
       return coin(id, 4 * (1 + y / 1000), (i >> 2) * 300, y);
     });
     assert.deepEqual(classify(coins).labels, ids);
+  });
+});
+
+describe('dropNonCoins', () => {
+  test('verwirft Kreise in Haut-, Rosa- und Blautönen', () => {
+    const coins = row(['1c', '10c', '1e', '2e']);
+    const skin = { x: 600, y: 0, r: 40, inner: { L: 70, a: 28, b: 9 }, outer: { L: 64, a: 30, b: 15 } };
+    const paper = { x: 750, y: 0, r: 40, inner: { L: 76, a: -4, b: -12 }, outer: { L: 76, a: -4, b: -12 } };
+    assert.deepEqual(dropNonCoins([...coins, skin, paper]), coins);
+  });
+
+  test('verwirft Kreise, deren Größe zu keiner Münze passt', () => {
+    const coins = row(['1c', '5c', '10c', '50c', '1e', '2e']);
+    // Silberner Knopf mit 8 mm: viel kleiner als jede Münze.
+    const button = { x: 900, y: 0, r: 16, inner: SILVER, outer: SILVER };
+    assert.deepEqual(dropNonCoins([...coins, button]), coins);
+  });
+
+  test('behält von Hand ergänzte Münzen', () => {
+    const coins = [...row(['1e', '2e']), { x: 400, y: 0, r: 5, manual: true }];
+    assert.deepEqual(dropNonCoins(coins), coins);
   });
 });

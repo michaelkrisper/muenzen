@@ -3,7 +3,7 @@
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const { detectCoins } = require('../detect.js');
-const { classify } = require('../classify.js');
+const { classify, dropNonCoins } = require('../classify.js');
 
 function loadImage(file) {
   const [w, h] = execFileSync('magick', ['identify', '-auto-orient', '-format', '%w %h', file])
@@ -31,7 +31,7 @@ async function loadCv() {
   for (const file of process.argv.slice(2)) {
     const img = loadImage(file);
     const t = Date.now();
-    const coins = detectCoins(cv, img);
+    const coins = dropNonCoins(detectCoins(cv, img));
     const ms = Date.now() - t;
     const { labels, total } = classify(coins);
     console.log(

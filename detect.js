@@ -13,8 +13,12 @@ const MAX_OVERLAP = 0.35;
 // übersieht silberne Münzen auf hellem Grund; 100 war auf den Testfotos am besten.
 const CANNY_HIGH = 100;
 
-function detectCoins(cv, image, opts = {}) {
-  const sensitivity = opts.sensitivity ?? 0.5;
+// Geforderte Kreisförmigkeit für HOUGH_GRADIENT_ALT (0..1). Auf den
+// Testfotos war 0.82 bis 0.87 gleich gut; strenger übersieht Münzen,
+// lockerer liefert Fehltreffer.
+const PERFECTNESS = 0.82;
+
+function detectCoins(cv, image) {
   const scale = Math.min(1, WORK_SIZE / Math.max(image.width, image.height));
   const w = Math.round(image.width * scale);
   const h = Math.round(image.height * scale);
@@ -31,8 +35,6 @@ function detectCoins(cv, image, opts = {}) {
 
   const minDim = Math.min(w, h);
   const circlesMat = new cv.Mat();
-  // HOUGH_GRADIENT_ALT: param2 ist die geforderte Kreisförmigkeit (0..1).
-  const perfectness = 0.92 - 0.2 * sensitivity;
   cv.HoughCircles(
     gray,
     circlesMat,
@@ -40,7 +42,7 @@ function detectCoins(cv, image, opts = {}) {
     1.5,
     minDim * 0.03,
     CANNY_HIGH,
-    perfectness,
+    PERFECTNESS,
     Math.round(minDim * 0.025),
     Math.round(minDim * 0.35),
   );

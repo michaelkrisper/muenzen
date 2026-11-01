@@ -25,6 +25,17 @@ const sigmoid = (x) => 1 / (1 + Math.exp(-x));
 const warmth = (o) => o.b + 0.3 * Math.max(o.a, 0);
 const hue = (a, b) => (Math.atan2(b, a) * 180) / Math.PI;
 
+// Euro-Münzen sind silbern (kaum Farbe), messing- oder kupferfarben. Ein
+// deutlich rosa, roter oder blauer Kreis ist Haut, Papier oder Stoff. Kupfer
+// liegt bei etwa 40°, Haut und rosa Banknoten unter 25°; Messing reicht bei
+// grünstichigem Licht bis gegen 120°.
+const METAL_HUE = [25, 135];
+const SILVER_CHROMA = 12;
+function looksMetallic(o) {
+  const h = hue(o.a, o.b);
+  return Math.hypot(o.a, o.b) <= SILVER_CHROMA || (h >= METAL_HUE[0] && h <= METAL_HUE[1]);
+}
+
 // Wahrscheinlichkeit je Metallsorte aus Innen- und Außenfarbe. Die Schwelle
 // für Bimetall richtet sich nach der typischen Wärme der Münzen im Bild, so
 // gleicht sich Licht und Weißabgleich zum Teil aus.
@@ -67,6 +78,11 @@ function best(c, probs, s) {
   return { coin: bestCoin, cost: bestCost };
 }
 
+// Kosten, ab denen eine Münze als Fehltreffer gilt (etwa fünf
+// Standardabweichungen daneben). Gedeckelt geht sie auch so in die
+// Maßstabssuche ein, damit ein Knopf oder Schatten den Maßstab nicht verzieht.
+const OUTLIER_COST = 12.5;
+
 // Neigung braucht genug Münzen, sonst erklärt sie Größenunterschiede weg.
 const MIN_COINS_FOR_TILT = 6;
 const TILT_SIGMA = 0.15;
@@ -104,7 +120,7 @@ const range = (from, to, step) =>
 
 // coins: [{x, y, r, inner, outer}], fixed: [id|null] vom Benutzer festgelegte Sorten.
 function classify(coins, fixed = []) {
-  if (!coins.length) return { labels: [], field: null, total: 0, ambiguous: false };
+  if (!coins.length) return { labels: [], field: null, total: 0, ambiguous: false, outliers: [] };
   // Von Hand hinzugefügte Münzen haben weder Farbe noch echten Radius.
   const measured = coins.filter((c) => c.inner);
   const probs = colorProbs(coins, measured);
@@ -117,7 +133,9 @@ function classify(coins, fixed = []) {
       (sum, c, i) => {
         if (!c.inner) return sum;
         const s = scaleAt(field, c);
-        return sum + (anchors[i] ? sizeCost(c, anchors[i], s) : best(c, probs[i], s).cost);
+        return (
+          sum + (anchors[i] ? sizeCost(c, anchors[i], s) : Math.min(best(c, probs[i], s).cost, OUTLIER_COST))
+        );
       },
       (field.gx ** 2 + field.gy ** 2) / (2 * TILT_SIGMA ** 2),
     );
@@ -162,7 +180,20 @@ function classify(coins, fixed = []) {
   }
 
   const labels = labelsAt(field);
-  return { labels, field, total: sum(labels), ambiguous };
+  const outliers = coins
+    .map((c, i) =>
+      c.inner && !anchors[i] && best(c, probs[i], scaleAt(field, c)).cost > OUTLIER_COST ? i : -1,
+    )
+    .filter((i) => i >= 0);
+  return { labels, field, total: sum(labels), ambiguous, outliers };
 }
 
-if (typeof module !== 'undefined') module.exports = { COINS, COIN_BY_ID, classify };
+// Fehltreffer der Kreissuche entfernen: erst nach Farbe, dann Kreise, deren
+// Größe zu keiner Münze passt. Läuft einmal nach der Erkennung, vor Korrekturen.
+function dropNonCoins(coins) {
+  const metallic = coins.filter((c) => !c.inner || (looksMetallic(c.inner) && looksMetallic(c.outer)));
+  const { outliers } = classify(metallic);
+  return metallic.filter((_c, i) => !outliers.includes(i));
+}
+
+if (typeof module !== 'undefined') module.exports = { COINS, COIN_BY_ID, classify, dropNonCoins };
