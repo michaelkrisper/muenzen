@@ -30,6 +30,8 @@ Sorte und zeigt Anzahl und Gesamtwert, direkt im Browser und ohne Upload.
 
 1. Münzen **nebeneinander** auf einen einfarbigen, matten Untergrund legen.
 2. **Senkrecht von oben** fotografieren, bei gleichmäßigem Licht und ohne Blitz.
+   Die App öffnet beim Start gleich die Kamera; ohne Kamera-Erlaubnis geht es
+   über die Kamera-App oder ein gespeichertes Bild.
 3. Ergebnis prüfen. Gestrichelte Kreise sind automatisch erkannt, durchgezogene
    von Hand festgelegt.
 4. Meldet die App, dass die Größe nicht eindeutig ist (etwa bei lauter
@@ -70,7 +72,11 @@ flowchart LR
    [offiziellen Durchmessern](https://www.ecb.europa.eu/euro/coins/common/html/index.de.html)
    und ihrer Farbe passen. Ab sechs Münzen darf der Maßstab linear über das
    Bild wachsen, das gleicht ein schräg gehaltenes Handy aus.
-5. **Mehrdeutigkeit erkennen**: Passt ein deutlich anderer Maßstab fast
+5. **Fehltreffer verwerfen**: Kreise in Haut-, Rosa- oder Blautönen sind
+   keine Münzen (Euro-Münzen sind silbern, messing- oder kupferfarben). Kreise,
+   deren Größe zu keiner Sorte passt, etwa Knöpfe, fallen ebenfalls weg und
+   gehen nur gedeckelt in die Maßstabssuche ein.
+6. **Mehrdeutigkeit erkennen**: Passt ein deutlich anderer Maßstab fast
    genauso gut und ergibt einen anderen Betrag, weist die App darauf hin.
 
 ### Genauigkeit
@@ -79,6 +85,7 @@ flowchart LR
 |---|---|---|
 | Künstliche Fotos ([`make-fixture.py`](tools/make-fixture.py), 7 Seeds, je 20 Münzen) | 140 / 140 | Betrag in allen 7 Fotos exakt |
 | Echte Fotos von Wikimedia Commons (2 Fotos, schräg, teils dicht gedrängt) | 33 / 35 | 24 von 25 bestimmbaren Münzen richtig |
+| Echte Fotos von Wikimedia Commons (6 Fotos, auf Hand, Geldbörse, Banknoten, Flagge) | 36 / 38, kein Fehltreffer | 32 von 34 richtig |
 
 Grenzen: übereinanderliegende Haufen, starke Spiegelungen, sehr dunkle oder
 farbstichige Fotos und Münzen anderer Währungen.

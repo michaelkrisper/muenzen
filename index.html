@@ -20,13 +20,17 @@
 
   <main>
     <section id="start">
+      <div class="viewfinder" id="viewfinder" hidden>
+        <video id="camera" playsinline muted></video>
+      </div>
       <ol class="tips">
         <li>Münzen <strong>nebeneinander</strong> auf einen einfarbigen, matten Untergrund legen, nicht übereinander.</li>
         <li><strong>Senkrecht von oben</strong> fotografieren, gleichmäßiges Licht, möglichst ohne Blitz.</li>
         <li>Falsch erkannte Münzen danach einfach antippen und korrigieren.</li>
       </ol>
       <div class="actions">
-        <label class="btn primary">
+        <button type="button" class="btn primary" id="shutter" hidden>Foto aufnehmen</button>
+        <label class="btn primary" id="capture">
           <input type="file" accept="image/*" capture="environment" data-photo hidden>
           Foto aufnehmen
         </label>
@@ -52,10 +56,6 @@
 
       <div class="toolbar">
         <button type="button" class="btn" id="add" aria-pressed="false">+ Münze</button>
-        <label class="slider">
-          Empfindlichkeit
-          <input type="range" id="sensitivity" min="0" max="1" step="0.25" value="0.5">
-        </label>
       </div>
 
       <table class="breakdown">
@@ -63,10 +63,7 @@
       </table>
 
       <div class="actions">
-        <label class="btn primary">
-          <input type="file" accept="image/*" capture="environment" data-photo hidden>
-          Neues Foto
-        </label>
+        <button type="button" class="btn primary" id="again">Neues Foto</button>
         <button type="button" class="btn" id="share">Ergebnis teilen</button>
       </div>
     </section>

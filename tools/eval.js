@@ -4,7 +4,7 @@ const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
 const { detectCoins } = require('../detect.js');
-const { classify } = require('../classify.js');
+const { classify, dropNonCoins } = require('../classify.js');
 
 (async () => {
   const cv = require('../vendor/opencv.js');
@@ -27,7 +27,7 @@ const { classify } = require('../classify.js');
       .split(' ')
       .map(Number);
     const raw = execFileSync('magick', [file, '-depth', '8', 'rgba:-'], { maxBuffer: 1 << 30 });
-    const coins = detectCoins(cv, { data: new Uint8ClampedArray(raw), width: w, height: h });
+    const coins = dropNonCoins(detectCoins(cv, { data: new Uint8ClampedArray(raw), width: w, height: h }));
     const { labels } = classify(coins);
     const used = new Set();
     const wrong = [];

@@ -12,10 +12,10 @@ const ready = new Promise((resolve) => {
 });
 
 self.onmessage = async (e) => {
-  const { id, image, sensitivity } = e.data;
+  const { id, image } = e.data;
   await ready;
   try {
-    postMessage({ type: 'result', id, coins: detectCoins(self.cv, image, { sensitivity }) });
+    postMessage({ type: 'result', id, coins: detectCoins(self.cv, image) });
   } catch (err) {
     postMessage({ type: 'error', id, message: String(err?.message ?? err) });
   }

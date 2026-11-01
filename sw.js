@@ -1,6 +1,6 @@
 // Alles vorab zwischenspeichern; die App braucht danach kein Netz mehr.
 // Bei jeder Änderung an einer der Dateien VERSION hochzählen.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const FILES = [
   './',
   'index.html',

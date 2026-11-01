@@ -45,7 +45,15 @@
     {
       "includes": ["*.js"],
       "javascript": {
-        "globals": ["COINS", "COIN_BY_ID", "classify", "detectCoins", "importScripts", "module"]
+        "globals": [
+          "COINS",
+          "COIN_BY_ID",
+          "classify",
+          "detectCoins",
+          "dropNonCoins",
+          "importScripts",
+          "module"
+        ]
       }
     },
     {

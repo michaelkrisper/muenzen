@@ -1,6 +1,6 @@
 // Oberfläche: Foto laden, Erkennung im Worker anstoßen, Ergebnis zeichnen
-// und Korrekturen durch Antippen übernehmen. COINS und classify kommen aus
-// classify.js.
+// und Korrekturen durch Antippen übernehmen. COINS, classify und
+// dropNonCoins kommen aus classify.js.
 
 // Anzeigegröße des Fotos; die Erkennung verkleinert intern weiter.
 const DISPLAY_SIZE = 1600;
@@ -48,11 +48,11 @@ worker.onerror = () => {
   $('engine').textContent = 'Die Bilderkennung konnte nicht geladen werden. Seite neu laden?';
 };
 
-function detect(imageData, sensitivity) {
+function detect(imageData) {
   const id = ++state.requestId;
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    worker.postMessage({ id, image: imageData, sensitivity }, [imageData.data.buffer]);
+    worker.postMessage({ id, image: imageData }, [imageData.data.buffer]);
   });
 }
 
@@ -66,10 +66,80 @@ for (const input of document.querySelectorAll('[data-photo]')) {
   });
 }
 
-async function loadPhoto(file) {
+// --- Kamera ---------------------------------------------------------------
+
+// Der Sucher startet gleich beim Öffnen; die Kamera-App des Handys ließe
+// sich nur nach einem Antippen öffnen. Ohne Kamera oder Erlaubnis bleiben
+// die Dateiknöpfe.
+let stream = null;
+
+async function startCamera() {
+  if (stream || !navigator.mediaDevices?.getUserMedia) return;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: 'environment', width: { ideal: 4096 }, height: { ideal: 4096 } },
+    });
+  } catch {
+    return;
+  }
+  // Inzwischen weitergeblättert oder ausgeblendet: gleich wieder freigeben.
+  if ($('start').hidden || document.hidden) {
+    stopCamera();
+    return;
+  }
+  const video = $('camera');
+  video.srcObject = stream;
+  await video.play().catch(() => {});
+  $('viewfinder').hidden = false;
+  $('shutter').hidden = false;
+  $('capture').hidden = true;
+}
+
+function stopCamera() {
+  for (const track of stream?.getTracks() ?? []) track.stop();
+  stream = null;
+  $('camera').srcObject = null;
+  $('viewfinder').hidden = true;
+  $('shutter').hidden = true;
+  $('capture').hidden = false;
+}
+
+$('shutter').addEventListener('click', async () => {
+  const video = $('camera');
+  if (!stream || !video.videoWidth) return;
+  let source = video;
+  // Chrome auf Android liefert über ImageCapture die volle Fotoauflösung,
+  // sonst bleibt das aktuelle Videobild.
+  if ('ImageCapture' in self) {
+    try {
+      source = await new ImageCapture(stream.getVideoTracks()[0]).takePhoto();
+    } catch {
+      /* Videobild verwenden */
+    }
+  }
+  await loadPhoto(source);
+});
+
+$('again').addEventListener('click', () => {
+  $('result').hidden = true;
+  $('start').hidden = false;
+  startCamera();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopCamera();
+  else if (!$('start').hidden) startCamera();
+});
+
+startCamera();
+
+// source: Datei, Blob oder Videobild.
+async function loadPhoto(source) {
+  stopCamera();
   let bitmap;
   try {
-    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    bitmap = await createImageBitmap(source, { imageOrientation: 'from-image' });
   } catch {
     alert('Dieses Bild kann der Browser nicht öffnen.');
     return;
@@ -102,10 +172,10 @@ async function runDetection() {
   $('busy').textContent = engineReady ? 'Suche Münzen …' : 'Bilderkennung wird geladen …';
   const id = state.requestId + 1;
   try {
-    const coins = await detect(imageData, Number($('sensitivity').value));
+    const coins = await detect(imageData);
     if (id !== state.requestId) return;
-    state.coins = coins;
-    state.fixed = coins.map(() => null);
+    state.coins = dropNonCoins(coins);
+    state.fixed = state.coins.map(() => null);
   } catch (err) {
     console.error(err);
     alert('Bei der Erkennung ist etwas schiefgegangen.');
@@ -114,10 +184,6 @@ async function runDetection() {
   }
   update();
 }
-
-$('sensitivity').addEventListener('change', () => {
-  if (state.bitmap) runDetection();
-});
 
 // --- Darstellung ----------------------------------------------------------
 
