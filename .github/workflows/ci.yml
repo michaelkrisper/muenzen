@@ -1,7 +1,7 @@
 name: CI
 
-# Prüft jeden Push und Pull Request (Lint, Unit-Tests, Browsertest) und
-# veröffentlicht den Stand von main danach auf GitHub Pages.
+# Checks every push and pull request (lint, unit tests, browser test) and
+# then publishes main to GitHub Pages.
 
 on:
   push:
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   check:
-    name: Lint und Tests
+    name: Lint and tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -34,8 +34,8 @@ jobs:
           pipx run ruff format --check tools
       - run: npm test
 
-      # Künstliches Foto mit 20 Münzen im Wert von 11,06 Euro, siehe
-      # tools/make-fixture.py (Seed 1). Chrome ist auf dem Runner vorinstalliert.
+      # Synthetic photo with 20 coins worth 11.06 euros, see
+      # tools/make-fixture.py (seed 1). Chrome is preinstalled on the runner.
       - run: npm run test:e2e
 
   deploy:
@@ -54,7 +54,7 @@ jobs:
       url: ${{ steps.pages.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
-      - name: Seite zusammenstellen
+      - name: Assemble site
         run: |
           mkdir _site
           cp -r index.html style.css app.js classify.js detect.js worker.js sw.js \

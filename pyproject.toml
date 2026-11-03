@@ -1,4 +1,4 @@
-# Nur für Ruff: tools/make-fixture.py ist das einzige Python im Repo.
+# Ruff only: tools/make-fixture.py is the only Python in the repo.
 [tool.ruff]
 line-length = 110
 target-version = "py312"

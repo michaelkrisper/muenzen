@@ -1,21 +1,21 @@
-// Kreissuche und Farbmessung mit OpenCV.js. Läuft im Worker (importScripts)
-// und unter Node für die Tests, deshalb kein ES-Modul.
+// Circle search and colour measurement with OpenCV.js. Runs in the worker
+// (importScripts) and under Node for the tests, hence no ES module.
 
-// Arbeitsgröße: die längere Bildseite wird darauf verkleinert. Mehr bringt
-// für die Hough-Suche kaum Genauigkeit, kostet aber deutlich Rechenzeit.
+// Working size: the longer image side is scaled down to this. More adds
+// hardly any accuracy to the Hough search but costs a lot of time.
 const WORK_SIZE = 1000;
 
-// Größter Anteil, um den sich zwei Kreise überdecken dürfen, bevor der
-// schwächere verworfen wird. Münzen liegen nebeneinander, nicht übereinander.
+// Largest fraction by which two circles may overlap before the weaker one
+// is dropped. Coins lie next to each other, not on top of each other.
 const MAX_OVERLAP = 0.35;
 
-// Obere Canny-Schwelle. Der OpenCV-Vorschlag für HOUGH_GRADIENT_ALT (300)
-// übersieht silberne Münzen auf hellem Grund; 100 war auf den Testfotos am besten.
+// Upper Canny threshold. OpenCV's suggestion for HOUGH_GRADIENT_ALT (300)
+// misses silver coins on a light background; 100 was best on the test photos.
 const CANNY_HIGH = 100;
 
-// Geforderte Kreisförmigkeit für HOUGH_GRADIENT_ALT (0..1). Auf den
-// Testfotos war 0.82 bis 0.87 gleich gut; strenger übersieht Münzen,
-// lockerer liefert Fehltreffer.
+// Required circularity for HOUGH_GRADIENT_ALT (0..1). On the test photos
+// 0.82 to 0.87 did equally well; stricter misses coins, looser gives
+// false detections.
 const PERFECTNESS = 0.82;
 
 function detectCoins(cv, image) {
@@ -78,8 +78,8 @@ function detectCoins(cv, image) {
 }
 
 function removeOverlaps(circles) {
-  // Größere Kreise zuerst, damit eine Münze nicht von ihrem eigenen Innenring
-  // (bei 1 und 2 Euro deutlich sichtbar) verdrängt wird.
+  // Larger circles first, so a coin is not displaced by its own inner ring
+  // (clearly visible on 1 and 2 euro coins).
   const sorted = [...circles].sort((a, b) => b.r - a.r);
   const kept = [];
   for (const c of sorted) {
@@ -93,9 +93,9 @@ function removeOverlaps(circles) {
   return kept;
 }
 
-// Hough liefert Radien auf einige Prozent genau; für die Unterscheidung der
-// Münzgrößen reicht das nicht. Deshalb entlang von Strahlen die stärkste
-// Kante suchen und durch diese Punkte einen Kreis legen.
+// Hough gives radii to within a few percent; not enough to tell the coin
+// sizes apart. So search the strongest edge along rays and fit a circle
+// through those points.
 function refineCircle(gx, gy, c) {
   const n = 90;
   const pts = [];
@@ -122,7 +122,7 @@ function refineCircle(gx, gy, c) {
   }
   if (pts.length < n / 2) return c;
 
-  // Schwache Kanten (Nachbarmünze, Schatten, Bildrand) zuerst aussortieren.
+  // Drop weak edges (neighbouring coin, shadow, image border) first.
   const gMed = median(pts.map((p) => p.g));
   let use = pts.filter((p) => p.g >= gMed * 0.4);
   let fit = fitCircle(use);
@@ -136,7 +136,7 @@ function refineCircle(gx, gy, c) {
   return fit;
 }
 
-// Algebraischer Kreisausgleich (Kåsa): x² + y² + Dx + Ey + F = 0.
+// Algebraic circle fit (Kåsa): x² + y² + Dx + Ey + F = 0.
 function fitCircle(pts) {
   if (pts.length < 3) return null;
   let mx = 0,
@@ -174,8 +174,8 @@ function fitCircle(pts) {
   return { x: uc + mx, y: vc + my, r: Math.sqrt(uc * uc + vc * vc + (suu + svv) / pts.length) };
 }
 
-// Median von L, a, b im Ring zwischen r0 und r1 (Anteile des Radius).
-// Median statt Mittelwert, weil Glanzlichter sonst die Farbe ausbleichen.
+// Median of L, a, b in the ring between r0 and r1 (fractions of the radius).
+// Median rather than mean, because highlights would otherwise bleach the colour.
 function sampleLab(lab, c, r0, r1) {
   const L = [],
     A = [],

@@ -1,5 +1,5 @@
-// Erkennung auf Fotos ausprobieren: node tools/try.js bild.jpg [...]
-// Schreibt je Bild <name>.out.jpg mit eingezeichneten Münzen daneben.
+// Try detection on photos: node tools/try.js photo.jpg [...]
+// Writes <name>.out.jpg with the coins drawn in next to each photo.
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const { detectCoins } = require('../detect.js');
@@ -16,8 +16,8 @@ function loadImage(file) {
 
 async function loadCv() {
   const cv = require('../vendor/opencv.js');
-  // Das Emscripten-Modul ist selbst "thenable"; direkt zurückgegeben würde
-  // await es endlos weiter auflösen.
+  // The Emscripten module is itself "thenable"; returned directly, await
+  // would keep resolving it forever.
   if (!cv.Mat)
     await new Promise((r) => {
       cv.onRuntimeInitialized = r;
@@ -34,9 +34,7 @@ async function loadCv() {
     const coins = dropNonCoins(detectCoins(cv, img));
     const ms = Date.now() - t;
     const { labels, total } = classify(coins);
-    console.log(
-      `\n${path.basename(file)}: ${coins.length} Münzen, ${(total / 100).toFixed(2)} EUR, ${ms} ms`,
-    );
+    console.log(`\n${path.basename(file)}: ${coins.length} coins, ${(total / 100).toFixed(2)} EUR, ${ms} ms`);
     const draw = [];
     coins.forEach((c, i) => {
       const f = (o) => `L${o.L.toFixed(0)} a${o.a.toFixed(0)} b${o.b.toFixed(0)}`;

@@ -1,26 +1,26 @@
-name: Falsch erkannt
-description: Münzen wurden nicht gefunden oder falsch eingeordnet
+name: Wrong recognition
+description: Coins not found or classified as the wrong denomination
 labels: [erkennung]
 body:
   - type: markdown
     attributes:
       value: |
-        Danke! Ein Beispielfoto hilft am meisten. Bitte nur Fotos anhängen,
-        die du selbst gemacht hast; sie werden hier öffentlich.
+        Thanks! An example photo helps most. Please only attach photos you
+        took yourself; they become public here.
   - type: textarea
     id: was
     attributes:
-      label: Was ist passiert?
-      description: z. B. „2-Euro-Münze als 50 Cent erkannt“ oder „drei Münzen fehlen“
+      label: What happened?
+      description: e.g. "2 euro coin recognised as 50 cent" or "three coins missing"
     validations:
       required: true
   - type: textarea
     id: foto
     attributes:
-      label: Foto
-      description: Hierher ziehen oder einfügen.
+      label: Photo
+      description: Drag it here or paste it.
   - type: input
     id: geraet
     attributes:
-      label: Gerät und Browser
+      label: Device and browser
       placeholder: Pixel 9, Chrome 152

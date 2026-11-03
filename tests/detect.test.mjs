@@ -10,11 +10,11 @@ let cv;
 before(async () => {
   cv = require('../vendor/opencv.js');
   if (!cv.Mat) await new Promise((resolve) => (cv.onRuntimeInitialized = resolve));
-  // Das Emscripten-Modul ist "thenable" und würde jedes await blockieren.
+  // The Emscripten module is "thenable" and would block every await.
   delete cv.then;
 });
 
-// Zeichnet Scheiben mit Kern und Ring auf hellgrauen Grund, leicht verrauscht.
+// Draws discs with core and ring on a light grey background, slightly noisy.
 function render(width, height, discs) {
   const data = new Uint8ClampedArray(width * height * 4);
   let seed = 7;
@@ -63,18 +63,18 @@ const DISCS = [
 ];
 
 describe('detectCoins', () => {
-  test('findet alle Scheiben mit genauem Radius', () => {
+  test('finds all discs with an accurate radius', () => {
     const coins = detectCoins(cv, render(800, 450, DISCS));
     assert.equal(coins.length, DISCS.length);
     for (const d of DISCS) {
       const hit = coins.find((c) => Math.hypot(c.x - d.x, c.y - d.y) < d.r * 0.2);
-      assert.ok(hit, `keine Münze bei ${d.x},${d.y}`);
-      // Die Größe trennt die Sorten nur um etwa 5 %, also muss der Radius genauer sein.
-      assert.ok(Math.abs(hit.r / d.r - 1) < 0.025, `Radius ${hit.r.toFixed(1)} statt ${d.r}`);
+      assert.ok(hit, `no coin at ${d.x},${d.y}`);
+      // Size separates the denominations by only about 5 %, so the radius must be more accurate.
+      assert.ok(Math.abs(hit.r / d.r - 1) < 0.025, `radius ${hit.r.toFixed(1)} instead of ${d.r}`);
     }
   });
 
-  test('Ende zu Ende: Sorten und Betrag', () => {
+  test('end to end: denominations and amount', () => {
     const coins = detectCoins(cv, render(800, 450, DISCS));
     const order = DISCS.map((d) => coins.findIndex((c) => Math.hypot(c.x - d.x, c.y - d.y) < d.r * 0.2));
     const { labels, total } = classify(coins);
@@ -85,7 +85,7 @@ describe('detectCoins', () => {
     assert.equal(total, 366);
   });
 
-  test('leerer Untergrund ergibt keine Münzen', () => {
+  test('empty background yields no coins', () => {
     assert.equal(detectCoins(cv, render(400, 300, [])).length, 0);
   });
 });

@@ -1,35 +1,36 @@
-# Mitarbeiten
+# Contributing
 
-Fehlerberichte, Fotos mit Fehlerkennungen und Pull Requests sind willkommen.
+Bug reports, photos with misdetections and pull requests are welcome.
 
-## Einrichten
+## Setup
 
-Voraussetzungen: Node.js 24, Google Chrome (für den Browsertest), für die
-Werkzeuge in `tools/` außerdem Python 3 mit NumPy und ImageMagick.
+Requirements: Node.js 24, Google Chrome (for the browser test), and for the
+tools in `tools/` also Python 3 with NumPy and ImageMagick.
 
 ```sh
 npm ci
 npm run serve        # http://localhost:8080
 ```
 
-Es gibt keinen Build-Schritt; die Dateien im Hauptverzeichnis sind die App.
+There is no build step; the files in the repository root are the app.
 
-## Vor dem Pull Request
+## Before a pull request
 
 ```sh
-npm run lint:fix     # Biome: formatieren und linten
-npm test             # Unit-Tests (node:test)
-npm run test:e2e     # Ende-zu-Ende im headless Chrome
+npm run lint:fix     # Biome: format and lint
+npm test             # unit tests (node:test)
+npm run test:e2e     # end to end in headless Chrome
 ```
 
-Die CI führt dieselben Schritte aus, dazu Ruff für `tools/*.py`.
+CI runs the same steps, plus Ruff for `tools/*.py`.
 
-## Hinweise
+## Notes
 
-- Änderungen an App-Dateien: `VERSION` in `sw.js` hochzählen, sonst
-  liefert der Service Worker weiter die alte Fassung aus.
-- Änderungen an der Erkennung mit `tools/eval.js` gegen eigene Fotos mit
-  Sollwerten prüfen und die Zahlen vorher/nachher im Pull Request nennen.
-- Keine Fotos fremder Urheber ins Repo; für Tests gibt es
+- Changes to app files: bump `VERSION` in `sw.js`, otherwise the service
+  worker keeps serving the old version.
+- Check changes to detection with `tools/eval.js` against your own photos
+  with ground truth and give the before/after numbers in the pull request.
+- No photos by other authors in the repository; tests use
   `tools/make-fixture.py`.
-- Commit-Nachrichten und Kommentare auf Deutsch, Code-Bezeichner auf Englisch.
+- Commit messages, comments and identifiers in English; the user interface
+  stays German.

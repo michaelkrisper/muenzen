@@ -1,11 +1,11 @@
 /**
- * Ende-zu-Ende-Test im echten Browser: startet einen statischen Server, lädt
- * ein Foto über das Dateifeld, wartet auf die Erkennung und prüft Summe und
- * Anzahl. Korrigiert danach eine Münze über den Auswahldialog.
+ * End-to-end test in a real browser: starts a static server, loads a photo
+ * through the file input, waits for detection and checks sum and count.
+ * Then corrects one coin through the picker dialog and checks the offline cache.
  *
- *   node tests/browser-check.mjs [foto.jpg] [erwartete Anzahl] [erwarteter Betrag in Cent]
+ *   node tests/browser-check.mjs [photo.jpg] [expected count] [expected amount in cents]
  *
- * Chrome statt obscura: die App braucht Worker, WebAssembly und Canvas.
+ * Chrome rather than obscura: the app needs workers, WebAssembly and canvas.
  */
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -75,7 +75,7 @@ class Tab {
         await wait(200);
       }
     }
-    throw new Error('Chrome antwortet nicht');
+    throw new Error('Chrome does not respond');
   }
 
   #connect(url) {
@@ -123,13 +123,13 @@ class Tab {
       if (await this.eval(expression)) return;
       await wait(200);
     }
-    throw new Error(`Zeitüberschreitung: ${expression}`);
+    throw new Error(`Timeout: ${expression}`);
   }
 }
 
 let failed = false;
 const check = (ok, msg) => {
-  console.log(`${ok ? 'ok  ' : 'FEHLER'} ${msg}`);
+  console.log(`${ok ? 'ok  ' : 'FAIL'} ${msg}`);
   if (!ok) failed = true;
 };
 
@@ -140,7 +140,7 @@ try {
   await tab.send('DOM.enable');
   await tab.send('Page.navigate', { url: base });
   await tab.until(`document.getElementById('engine')?.textContent.startsWith('Bereit')`);
-  check(true, 'Bilderkennung geladen');
+  check(true, 'recognition engine loaded');
 
   const { root: doc } = await tab.send('DOM.getDocument');
   const { nodeId } = await tab.send('DOM.querySelector', {
@@ -155,14 +155,14 @@ try {
   console.log(
     `     ${await tab.eval(`document.getElementById('count').textContent`)}, ${await tab.eval(`document.getElementById('sum').value`)}`,
   );
-  check(count > 0, 'Münzen erkannt');
-  if (wantCount) check(count === wantCount, `Anzahl ${count}, erwartet ${wantCount}`);
-  if (wantCents) check(cents === wantCents, `Betrag ${cents} Cent, erwartet ${wantCents}`);
+  check(count > 0, 'coins detected');
+  if (wantCount) check(count === wantCount, `count ${count}, expected ${wantCount}`);
+  if (wantCents) check(cents === wantCents, `amount ${cents} cents, expected ${wantCents}`);
 
   const shot = await tab.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
-  writeFileSync(join(tmpdir(), 'muenzen-ergebnis.png'), Buffer.from(shot.data, 'base64'));
+  writeFileSync(join(tmpdir(), 'muenzen-result.png'), Buffer.from(shot.data, 'base64'));
 
-  // Erste Münze antippen und als 2 Euro festlegen.
+  // Tap the first coin and set it to 2 euros.
   const pt =
     await tab.eval(`(() => { const c = state.coins[0]; const r = document.getElementById('photo').getBoundingClientRect();
     return { x: r.left + c.x / state.bitmap.width * r.width, y: r.top + c.y / state.bitmap.height * r.height }; })()`);
@@ -172,21 +172,21 @@ try {
   await tab.until(`document.getElementById('picker').open`, 5000);
   await tab.eval(`document.querySelector('#choices button[value="2e"]').click()`);
   await tab.until(`!document.getElementById('picker').open`, 5000);
-  // Das close-Ereignis des Dialogs kommt erst nach dem Schließen.
+  // The dialog's close event only fires after it has closed.
   await tab.until(`state.fixed[0] === '2e' && state.labels[0] === '2e'`, 5000);
-  check(true, 'Korrektur übernommen');
+  check(true, 'correction applied');
 
-  // Erst wenn alles im Cache liegt, ist die Installation durch.
+  // Installation is complete only once everything is cached.
   await tab.until(
     `navigator.serviceWorker.getRegistration().then((r) => r?.active?.state === 'activated')`,
     30000,
   );
   await tab.until(`caches.match('vendor/opencv.js').then(Boolean)`, 5000);
-  check(true, 'Offline-Cache vollständig');
+  check(true, 'offline cache complete');
 
   check(
     tab.errors.length === 0,
-    `keine Fehler in der Konsole${tab.errors.length ? `: ${tab.errors.join(' | ')}` : ''}`,
+    `no console errors${tab.errors.length ? `: ${tab.errors.join(' | ')}` : ''}`,
   );
 } catch (err) {
   check(false, err.message);

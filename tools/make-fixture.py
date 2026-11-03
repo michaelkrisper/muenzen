@@ -1,9 +1,9 @@
-"""Erzeugt ein künstliches Münzfoto mit bekanntem Inhalt für die Tests.
+"""Creates a synthetic coin photo with known contents for the tests.
 
     python3 tools/make-fixture.py tests/fixtures/coins.jpg [seed]
 
-Gibt Anzahl und Betrag in Cent aus. Keine echten Fotos im Repo, weil deren
-Lizenz eine Namensnennung verlangt und sie für CI nicht nötig sind.
+Prints count and amount in cents. No real photos in the repo, because their
+licences require attribution and CI does not need them.
 """
 
 import subprocess
@@ -11,7 +11,7 @@ import sys
 
 import numpy as np
 
-# id, Durchmesser mm, Kern-Anteil (Bimetall), Außenfarbe, Kernfarbe, Wert
+# id, diameter mm, core fraction (bimetal), outer colour, core colour, value
 COPPER = (176, 104, 62)
 GOLD = (200, 165, 80)
 SILVER = (186, 186, 182)
@@ -34,7 +34,7 @@ def main():
     px_per_mm = 4.2
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
 
-    # Hellgrauer Karton mit leichtem Helligkeitsverlauf und Rauschen.
+    # Light grey cardboard with a slight brightness gradient and noise.
     img = np.empty((h, w, 3), np.float32)
     shade = 0.9 + 0.1 * (xx / w) - 0.05 * (yy / h)
     for k, v in enumerate((205, 207, 212)):
@@ -52,7 +52,7 @@ def main():
 
     for x, y, r, (_id, _d, core, outer, inner, _value) in placed:
         dist = np.hypot(xx - x, yy - y)
-        # Schatten leicht nach rechts unten.
+        # Shadow slightly towards the bottom right.
         sd = np.hypot(xx - x - r * 0.06, yy - y - r * 0.08)
         img *= (1 - 0.25 * np.clip((r * 1.04 - sd) / 3, 0, 1))[..., None]
 
@@ -61,7 +61,7 @@ def main():
         is_core = dist < r * core
         for k in range(3):
             col[..., k] = np.where(is_core, inner[k], outer[k])
-        # Licht von links oben, dunklerer Rand, Prägung als feines Rauschen.
+        # Light from the top left, darker rim, relief as fine noise.
         light = 0.85 + 0.25 * (-(xx - x) - (yy - y)) / (2 * r)
         rim = 1 - 0.18 * np.clip((dist - r * 0.88) / (r * 0.12), 0, 1)
         relief = 1 + 0.06 * rng.standard_normal((h, w)).astype(np.float32)

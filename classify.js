@@ -1,8 +1,8 @@
-// Ordnet erkannten Kreisen Euro-Münzen zu: Farbe (Kupfer, Messing,
-// Bimetall) aus der Messung, Größe über einen gemeinsamen Maßstab für das
-// ganze Bild. Ohne OpenCV, damit es auch nach Korrekturen sofort neu läuft.
+// Assigns euro coins to detected circles: colour (copper, brass,
+// bimetal) from the measurement, size via one common scale for the
+// whole image. No OpenCV, so it reruns instantly after corrections.
 
-// Durchmesser in mm laut EZB.
+// Diameters in mm according to the ECB.
 const COINS = [
   { id: '1c', label: '1 Cent', value: 1, d: 16.25, metal: 'copper' },
   { id: '2c', label: '2 Cent', value: 2, d: 18.75, metal: 'copper' },
@@ -15,20 +15,20 @@ const COINS = [
 ];
 const COIN_BY_ID = Object.fromEntries(COINS.map((c) => [c.id, c]));
 
-// Streuung des gemessenen Durchmessers relativ zum echten (Hough-Fehler,
-// leichte Schräglage beim Fotografieren).
+// Spread of the measured diameter relative to the true one (Hough error,
+// phone held slightly tilted).
 const SIZE_SIGMA = 0.035;
 
 const sigmoid = (x) => 1 / (1 + Math.exp(-x));
-// "Wärme" einer Fläche: Messing und Kupfer liegen im Lab-Raum deutlich im
-// Gelben (b > 0), Neusilber nahe null. Kupfer zählt über seinen Rotanteil mit.
+// "Warmth" of an area: brass and copper lie clearly in the yellow in Lab
+// space (b > 0), nickel silver near zero. Copper also counts via its red.
 const warmth = (o) => o.b + 0.3 * Math.max(o.a, 0);
 const hue = (a, b) => (Math.atan2(b, a) * 180) / Math.PI;
 
-// Euro-Münzen sind silbern (kaum Farbe), messing- oder kupferfarben. Ein
-// deutlich rosa, roter oder blauer Kreis ist Haut, Papier oder Stoff. Kupfer
-// liegt bei etwa 40°, Haut und rosa Banknoten unter 25°; Messing reicht bei
-// grünstichigem Licht bis gegen 120°.
+// Euro coins are silver (hardly any colour), brass or copper coloured. A
+// clearly pink, red or blue circle is skin, paper or fabric. Copper sits
+// at about 40°, skin and pink banknotes below 25°; under greenish light
+// brass reaches up to about 120°.
 const METAL_HUE = [25, 135];
 const SILVER_CHROMA = 12;
 function looksMetallic(o) {
@@ -36,9 +36,9 @@ function looksMetallic(o) {
   return Math.hypot(o.a, o.b) <= SILVER_CHROMA || (h >= METAL_HUE[0] && h <= METAL_HUE[1]);
 }
 
-// Wahrscheinlichkeit je Metallsorte aus Innen- und Außenfarbe. Die Schwelle
-// für Bimetall richtet sich nach der typischen Wärme der Münzen im Bild, so
-// gleicht sich Licht und Weißabgleich zum Teil aus.
+// Probability per metal from inner and outer colour. The bimetal threshold
+// follows the typical warmth of the coins in the image, which partly
+// compensates for lighting and white balance.
 function metalProbs(c, typicalWarmth) {
   const thr = Math.max(5, 0.4 * typicalWarmth);
   const dw = warmth(c.inner) - warmth(c.outer);
@@ -48,14 +48,14 @@ function metalProbs(c, typicalWarmth) {
   const h = hue((c.inner.a + c.outer.a) / 2, (c.inner.b + c.outer.b) / 2);
   const copper = sigmoid((52 - h) / 4);
   const p = { copper: mono * copper, gold: mono * (1 - copper), bi1, bi2 };
-  // Untergrenze, damit eine sehr eindeutige Größe die Farbe überstimmen kann.
+  // Floor, so that a very clear size can overrule the colour.
   for (const k in p) p[k] = Math.max(p[k], 0.02);
   return p;
 }
 
-// Maßstab (Pixel je mm) an der Stelle einer Münze. Ein schräg gehaltenes
-// Handy bildet nähere Münzen größer ab; über die Bildfläche wächst der
-// Maßstab dann ungefähr linear. field: { s, gx, gy, cx, cy, span }.
+// Scale (pixels per mm) at a coin's position. A tilted phone shows nearer
+// coins larger; the scale then grows roughly linearly across the image.
+// field: { s, gx, gy, cx, cy, span }.
 function scaleAt(field, c) {
   return field.s * (1 + (field.gx * (c.x - field.cx) + field.gy * (c.y - field.cy)) / field.span);
 }
@@ -78,16 +78,16 @@ function best(c, probs, s) {
   return { coin: bestCoin, cost: bestCost };
 }
 
-// Kosten, ab denen eine Münze als Fehltreffer gilt (etwa fünf
-// Standardabweichungen daneben). Gedeckelt geht sie auch so in die
-// Maßstabssuche ein, damit ein Knopf oder Schatten den Maßstab nicht verzieht.
+// Cost above which a coin counts as a false detection (about five standard
+// deviations off). It still enters the scale search, capped, so that a
+// button or shadow does not distort the scale.
 const OUTLIER_COST = 12.5;
 
-// Neigung braucht genug Münzen, sonst erklärt sie Größenunterschiede weg.
+// Tilt needs enough coins, otherwise it explains real size differences away.
 const MIN_COINS_FOR_TILT = 6;
 const TILT_SIGMA = 0.15;
 
-// Mittelpunkt und halbe Ausdehnung der Münzen, Bezug für die Neigung.
+// Centre and half extent of the coins, the reference for the tilt.
 function extent(coins) {
   const xs = coins.map((c) => c.x);
   const ys = coins.map((c) => c.y);
@@ -95,8 +95,8 @@ function extent(coins) {
   return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, span: Math.max(x1 - x0, y1 - y0, 1) / 2 };
 }
 
-// Metallwahrscheinlichkeiten aller Münzen; die Bimetall-Schwelle hängt von
-// der typischen Wärme der gemessenen Münzen im Bild ab.
+// Metal probabilities of all coins; the bimetal threshold depends on the
+// typical warmth of the measured coins in the image.
 function colorProbs(coins, measured) {
   const warmths = measured.map((c) => Math.max(warmth(c.inner), warmth(c.outer))).sort((a, b) => a - b);
   const typical = warmths[warmths.length >> 1] ?? 0;
@@ -104,7 +104,7 @@ function colorProbs(coins, measured) {
   return coins.map((c) => (c.inner ? metalProbs(c, typical) : uniform));
 }
 
-// Bestes Maßstabsfeld aus einer Kandidatenliste; liefert alle Bewertungen mit.
+// Best scale field from a list of candidates; also returns all scores.
 function minimize(fields, cost) {
   let best = null;
   const tried = fields.map((f) => {
@@ -118,16 +118,16 @@ function minimize(fields, cost) {
 const range = (from, to, step) =>
   Array.from({ length: Math.round((to - from) / step) + 1 }, (_, k) => from + k * step);
 
-// coins: [{x, y, r, inner, outer}], fixed: [id|null] vom Benutzer festgelegte Sorten.
+// coins: [{x, y, r, inner, outer}], fixed: [id|null] denominations set by the user.
 function classify(coins, fixed = []) {
   if (!coins.length) return { labels: [], field: null, total: 0, ambiguous: false, outliers: [] };
-  // Von Hand hinzugefügte Münzen haben weder Farbe noch echten Radius.
+  // Coins added by hand have neither colour nor a real radius.
   const measured = coins.filter((c) => c.inner);
   const probs = colorProbs(coins, measured);
   const anchors = fixed.map((id) => COIN_BY_ID[id] ?? null);
   const base = extent(measured);
 
-  // Festgelegte Münzen zählen nur mit ihrer eigenen Sorte, dafür ohne Farbe.
+  // Fixed coins count only with their own denomination, and without colour.
   const totalCost = (field) =>
     coins.reduce(
       (sum, c, i) => {
@@ -143,7 +143,7 @@ function classify(coins, fixed = []) {
     coins.map((c, i) => (anchors[i] ? anchors[i].id : best(c, probs[i], scaleAt(f, c)).coin.id));
   const sum = (labels) => labels.reduce((acc, id) => acc + COIN_BY_ID[id].value, 0);
 
-  // Jede Paarung Münze/Sorte liefert einen Kandidaten für den Maßstab.
+  // Every coin/denomination pair yields a candidate scale.
   const fixedIdx = coins.map((c, i) => (anchors[i] && c.inner ? i : -1)).filter((i) => i >= 0);
   const candidates = fixedIdx.length
     ? fixedIdx.map((i) => (2 * coins[i].r) / anchors[i].d)
@@ -157,9 +157,9 @@ function classify(coins, fixed = []) {
     totalCost,
   );
 
-  // Passt ein deutlich anderer Maßstab fast genauso gut und ergibt einen
-  // anderen Betrag, lässt sich die Größe nicht bestimmen (z. B. nur
-  // gleich große Messingmünzen). Dann muss der Benutzer eine festlegen.
+  // If a clearly different scale fits almost as well and gives a different
+  // amount, the size cannot be determined (e.g. only brass coins of equal
+  // size). The user then has to fix one coin.
   const flatSum = sum(labelsAt(flat.field));
   const ambiguous =
     !fixedIdx.length &&
@@ -188,8 +188,8 @@ function classify(coins, fixed = []) {
   return { labels, field, total: sum(labels), ambiguous, outliers };
 }
 
-// Fehltreffer der Kreissuche entfernen: erst nach Farbe, dann Kreise, deren
-// Größe zu keiner Münze passt. Läuft einmal nach der Erkennung, vor Korrekturen.
+// Removes false detections of the circle search: first by colour, then circles
+// whose size fits no coin. Runs once after detection, before corrections.
 function dropNonCoins(coins) {
   const metallic = coins.filter((c) => !c.inner || (looksMetallic(c.inner) && looksMetallic(c.outer)));
   const { outliers } = classify(metallic);

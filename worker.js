@@ -1,12 +1,12 @@
-// Bilderkennung im Hintergrund, damit das 10-MB-OpenCV die Oberfläche nicht
-// blockiert, weder beim Laden noch beim Rechnen.
+// Image recognition in the background, so the 10 MB OpenCV build blocks the
+// UI neither while loading nor while computing.
 importScripts('vendor/opencv.js', 'detect.js');
 
 const ready = new Promise((resolve) => {
   if (self.cv.Mat) resolve();
   else self.cv.onRuntimeInitialized = resolve;
 }).then(() => {
-  // Das Emscripten-Modul ist "thenable" und würde jedes await blockieren.
+  // The Emscripten module is "thenable" and would block every await.
   delete self.cv.then;
   postMessage({ type: 'ready' });
 });

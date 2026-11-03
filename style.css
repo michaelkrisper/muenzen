@@ -63,7 +63,7 @@ footer {
   max-height: 65dvh;
   object-fit: cover;
 }
-/* Mit Sucher genügt der kurze Hinweis, der Platz gehört dem Bild. */
+/* With the viewfinder the short hint is enough; the space belongs to the image. */
 .viewfinder:not([hidden]) + .tips li:not(:first-child) {
   display: none;
 }

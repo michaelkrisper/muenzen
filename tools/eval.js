@@ -1,5 +1,5 @@
-// Erkennung gegen Sollwerte prüfen: node tools/eval.js truth.json
-// truth.json: { "bild.jpg": [[x, y, sorte|null], ...] }, Pfade relativ zur Datei.
+// Checks detection against ground truth: node tools/eval.js truth.json
+// truth.json: { "photo.jpg": [[x, y, denomination|null], ...] }, paths relative to the file.
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -35,7 +35,7 @@ const { classify, dropNonCoins } = require('../classify.js');
       total++;
       const i = coins.findIndex((c, k) => !used.has(k) && Math.hypot(c.x - x, c.y - y) < c.r * 0.5);
       if (i < 0) {
-        wrong.push(`(${x},${y}) fehlt`);
+        wrong.push(`(${x},${y}) missing`);
         continue;
       }
       used.add(i);
@@ -43,10 +43,10 @@ const { classify, dropNonCoins } = require('../classify.js');
       if (!want) continue;
       labelled++;
       if (labels[i] === want) right++;
-      else wrong.push(`(${x},${y}) ${labels[i]} statt ${want}`);
+      else wrong.push(`(${x},${y}) ${labels[i]} instead of ${want}`);
     }
     extra += coins.length - used.size;
-    console.log(`${name}: ${coins.length} erkannt, ${coins.length - used.size} zu viel; ${wrong.join('; ')}`);
+    console.log(`${name}: ${coins.length} detected, ${coins.length - used.size} extra; ${wrong.join('; ')}`);
   }
-  console.log(`\nGefunden ${found}/${total}, zu viel ${extra}, richtig ${right}/${labelled}`);
+  console.log(`\nFound ${found}/${total}, extra ${extra}, correct ${right}/${labelled}`);
 })();

@@ -1,8 +1,8 @@
-// Oberfläche: Foto laden, Erkennung im Worker anstoßen, Ergebnis zeichnen
-// und Korrekturen durch Antippen übernehmen. COINS, classify und
-// dropNonCoins kommen aus classify.js.
+// UI: load a photo, start detection in the worker, draw the result and
+// apply corrections made by tapping. COINS, classify and dropNonCoins
+// come from classify.js.
 
-// Anzeigegröße des Fotos; die Erkennung verkleinert intern weiter.
+// Display size of the photo; detection scales it down further internally.
 const DISPLAY_SIZE = 1600;
 
 const COLORS = {
@@ -17,8 +17,8 @@ const euro = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR'
 
 const state = {
   bitmap: null,
-  coins: [], // { x, y, r, inner, outer } in Bildpunkten des Anzeigebilds
-  fixed: [], // vom Benutzer gewählte Sorte je Münze oder null
+  coins: [], // { x, y, r, inner, outer } in pixels of the displayed image
+  fixed: [], // denomination chosen by the user per coin, or null
   labels: [],
   adding: false,
   ambiguous: false,
@@ -56,7 +56,7 @@ function detect(imageData) {
   });
 }
 
-// --- Foto laden -----------------------------------------------------------
+// --- Load photo -----------------------------------------------------------
 
 for (const input of document.querySelectorAll('[data-photo]')) {
   input.addEventListener('change', async () => {
@@ -66,11 +66,11 @@ for (const input of document.querySelectorAll('[data-photo]')) {
   });
 }
 
-// --- Kamera ---------------------------------------------------------------
+// --- Camera ---------------------------------------------------------------
 
-// Der Sucher startet gleich beim Öffnen; die Kamera-App des Handys ließe
-// sich nur nach einem Antippen öffnen. Ohne Kamera oder Erlaubnis bleiben
-// die Dateiknöpfe.
+// The viewfinder starts right away on opening; the phone's camera app could
+// only be opened after a tap. Without a camera or permission the file
+// buttons remain.
 let stream = null;
 
 async function startCamera() {
@@ -83,7 +83,7 @@ async function startCamera() {
   } catch {
     return;
   }
-  // Inzwischen weitergeblättert oder ausgeblendet: gleich wieder freigeben.
+  // Navigated away or hidden in the meantime: release it again right away.
   if ($('start').hidden || document.hidden) {
     stopCamera();
     return;
@@ -109,13 +109,13 @@ $('shutter').addEventListener('click', async () => {
   const video = $('camera');
   if (!stream || !video.videoWidth) return;
   let source = video;
-  // Chrome auf Android liefert über ImageCapture die volle Fotoauflösung,
-  // sonst bleibt das aktuelle Videobild.
+  // Chrome on Android delivers the full photo resolution via ImageCapture;
+  // otherwise the current video frame is used.
   if ('ImageCapture' in self) {
     try {
       source = await new ImageCapture(stream.getVideoTracks()[0]).takePhoto();
     } catch {
-      /* Videobild verwenden */
+      /* use the video frame */
     }
   }
   await loadPhoto(source);
@@ -134,7 +134,7 @@ document.addEventListener('visibilitychange', () => {
 
 startCamera();
 
-// source: Datei, Blob oder Videobild.
+// source: file, blob or video frame.
 async function loadPhoto(source) {
   stopCamera();
   let bitmap;
@@ -185,7 +185,7 @@ async function runDetection() {
   update();
 }
 
-// --- Darstellung ----------------------------------------------------------
+// --- Rendering ------------------------------------------------------------
 
 function update() {
   const { labels, total, ambiguous } = classify(state.coins, state.fixed);
@@ -219,7 +219,7 @@ function draw() {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(bitmap, 0, 0);
 
-  // Linien- und Schriftgröße am angezeigten, nicht am echten Bild ausrichten.
+  // Base line width and font size on the displayed image, not the real one.
   const px = bitmap.width / canvas.getBoundingClientRect().width || 1;
   state.coins.forEach((c, i) => {
     const coin = COIN_BY_ID[state.labels[i]];
@@ -249,7 +249,7 @@ function draw() {
 
 window.addEventListener('resize', () => draw());
 
-// --- Korrekturen ----------------------------------------------------------
+// --- Corrections ----------------------------------------------------------
 
 function setAdding(on) {
   state.adding = on;
@@ -291,7 +291,7 @@ $('photo').addEventListener('click', async (e) => {
     return;
   }
 
-  // Nächstgelegene Münze, die den Punkt enthält (mit etwas Spielraum für Finger).
+  // Nearest coin that contains the point (with some slack for fingers).
   let hit = -1,
     bestD = Infinity;
   state.coins.forEach((c, i) => {
@@ -313,8 +313,8 @@ function removeCoin(i) {
   state.fixed.splice(i, 1);
 }
 
-// Öffnet die Auswahl; legt die gewählte Sorte direkt fest und liefert sonst
-// 'remove', 'auto' oder 'cancel'.
+// Opens the picker; sets the chosen denomination directly, otherwise
+// returns 'remove', 'auto' or 'cancel'.
 function pick(i) {
   const dialog = $('picker');
   const choices = $('choices');
@@ -328,7 +328,7 @@ function pick(i) {
     b.textContent = coin.label;
     choices.append(b);
   }
-  // Selbst hinzugefügte Münzen haben keine Farbmessung, Automatik geht nicht.
+  // Coins added by hand have no colour measurement, so automatic is not possible.
   $('auto').hidden = !!state.coins[i].manual;
   dialog.returnValue = 'cancel';
   dialog.showModal();
@@ -349,12 +349,12 @@ function pick(i) {
   });
 }
 
-// Ein Tipp neben die Auswahl schließt den Dialog.
+// A tap outside the picker closes the dialog.
 $('picker').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) e.currentTarget.close('cancel');
 });
 
-// --- Teilen ---------------------------------------------------------------
+// --- Share ----------------------------------------------------------------
 
 $('share').addEventListener('click', async () => {
   const lines = [...$('rows').children].map((tr) =>
@@ -371,7 +371,7 @@ $('share').addEventListener('click', async () => {
       }, 1500);
     }
   } catch {
-    /* abgebrochen */
+    /* cancelled */
   }
 });
 
