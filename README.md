@@ -1,147 +1,150 @@
 # Münzzähler
 
+Count euro coins from a photo: number of coins and total value, right in the browser.
+
 [![CI](https://github.com/michaelkrisper/muenzen/actions/workflows/ci.yml/badge.svg)](https://github.com/michaelkrisper/muenzen/actions/workflows/ci.yml)
-[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue.svg)](LICENSE)
-[![Biome](https://img.shields.io/badge/Code--Stil-Biome-60a5fa?logo=biome&logoColor=white)](https://biomejs.dev)
-[![PWA](https://img.shields.io/badge/PWA-offline--f%C3%A4hig-5a0fc8)](https://michaelkrisper.github.io/muenzen/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Biome](https://img.shields.io/badge/code%20style-Biome-60a5fa?logo=biome&logoColor=white)](https://biomejs.dev)
+[![Live demo](https://img.shields.io/badge/demo-GitHub%20Pages-2ea44f)](https://michaelkrisper.github.io/muenzen/)
 
-Euro-Münzen per Foto zählen. Die App findet die Münzen im Bild, bestimmt ihre
-Sorte und zeigt Anzahl und Gesamtwert, direkt im Browser und ohne Upload.
+**Live: https://michaelkrisper.github.io/muenzen/**
 
-**→ [michaelkrisper.github.io/muenzen](https://michaelkrisper.github.io/muenzen/)**
+The app finds the coins in the image, determines each denomination and shows
+count and total, all on the device without any upload. It is an installable
+PWA; the user interface is in German.
 
 <p align="center">
-  <img src="docs/screenshot.png" width="340" alt="Ergebnisansicht: 18 Münzen im Wert von 10,07 Euro, jede Münze im Foto beschriftet, darunter die Aufschlüsselung nach Sorten">
+  <img src="docs/screenshot.png" width="340" alt="Result view: 18 coins worth 10.07 euros, each coin labelled in the photo, with a breakdown by denomination below">
 </p>
 
-## Funktionen
+## Features
 
-- **Alle acht Euro-Münzen** von 1 Cent bis 2 Euro, unterschieden über Farbe
-  (Kupfer, Messing, Bimetall) und Größe
-- **Gesamtwert und Aufschlüsselung** nach Sorte, als Text teilbar
-- **Korrigieren per Antippen**: falsch eingeordnete Münze antippen und Sorte
-  wählen; die übrigen Münzen werden mit dem neuen Maßstab neu bewertet
-- **Ergänzen und Entfernen**: übersehene Münzen per Fingertipp hinzufügen,
-  Fehltreffer löschen
-- **Installierbar und offline**: nach dem ersten Besuch läuft alles ohne Netz
-- **Privat**: das Foto verlässt das Gerät nicht, es gibt keinen Server und kein Tracking
+- **All eight euro coins** from 1 cent to 2 euros, told apart by colour
+  (copper, brass, bimetal) and size
+- **Total and breakdown** by denomination, shareable as text
+- **Correct by tapping:** tap a misclassified coin and choose its
+  denomination; the remaining coins are re-evaluated with the new scale
+- **Add and remove:** add missed coins with a tap, delete false detections
+- **Installable and offline:** after the first visit everything works without
+  a network connection
+- **Private:** the photo never leaves the device; there is no server and no tracking
 
-## Benutzung
+## Usage
 
-1. Münzen **nebeneinander** auf einen einfarbigen, matten Untergrund legen.
-2. **Senkrecht von oben** fotografieren, bei gleichmäßigem Licht und ohne Blitz.
-   Die App öffnet beim Start gleich die Kamera; ohne Kamera-Erlaubnis geht es
-   über die Kamera-App oder ein gespeichertes Bild.
-3. Ergebnis prüfen. Gestrichelte Kreise sind automatisch erkannt, durchgezogene
-   von Hand festgelegt.
-4. Meldet die App, dass die Größe nicht eindeutig ist (etwa bei lauter
-   10-Cent-Stücken), genügt es, eine Münze festzulegen.
+1. Lay the coins **next to each other** on a plain, matte surface.
+2. Photograph them **straight from above** in even light, without flash. The
+   app opens the camera on start; without camera permission use the camera
+   app or a saved image.
+3. Check the result. Dashed circles were detected automatically, solid ones
+   were set by hand.
+4. If the app reports that the size is ambiguous (e.g. only 10 cent coins),
+   fixing a single coin is enough.
 
-Auf dem Handy lässt sich die App über _Zum Startbildschirm hinzufügen_
-installieren.
+On a phone, install the app via _Add to Home Screen_.
 
-## Wie es funktioniert
+## How it works
 
-Ein Foto hat keinen bekannten Maßstab. Die App kann daher nicht einfach
-Millimeter messen, sondern vergleicht die Münzen untereinander.
+A photo has no known scale, so the app cannot simply measure millimetres. It
+compares the coins with each other instead.
 
 ```mermaid
 flowchart LR
-  A[Foto] --> B[Kreise finden<br><sub>Hough-Transformation</sub>]
-  B --> C[Rand nachmessen<br><sub>90 Strahlen, Kreisausgleich</sub>]
-  C --> D[Farbe messen<br><sub>Kern und Ring in L*a*b*</sub>]
-  D --> E[Maßstab schätzen<br><sub>alle Münzen gemeinsam</sub>]
-  E --> F[Sorte und Wert]
+  A[Photo] --> B[Find circles<br><sub>Hough transform</sub>]
+  B --> C[Re-measure rim<br><sub>90 rays, circle fit</sub>]
+  C --> D[Measure colour<br><sub>core and ring in L*a*b*</sub>]
+  D --> E[Estimate scale<br><sub>all coins together</sub>]
+  E --> F[Denomination and value]
 ```
 
-1. **Kreise finden** ([`detect.js`](detect.js), im Web Worker): OpenCV.js
-   `HoughCircles` mit `HOUGH_GRADIENT_ALT`. Überlappende Treffer werden
-   zugunsten des größeren verworfen, damit der Innenring einer 2-Euro-Münze
-   nicht als eigene Münze zählt.
-2. **Rand nachmessen**: Hough liefert Radien auf einige Prozent genau. Die
-   Größen benachbarter Sorten unterscheiden sich aber oft nur um 5 %.
-   Deshalb sucht die App entlang von 90 Strahlen die stärkste Kante und legt
-   durch diese Punkte einen Ausgleichskreis (Kåsa), mit Ausreißerfilter.
-3. **Farbe messen**: Median von L\*a\*b\* im Kern und im äußeren Ring. Der
-   Median ignoriert Glanzlichter. Kupfer und Messing trennt der Farbton,
-   Bimetall der Unterschied zwischen Kern und Ring: 1 Euro hat einen silbernen
-   Kern, 2 Euro einen silbernen Ring.
-4. **Maßstab schätzen** ([`classify.js`](classify.js)): Jede Kombination aus
-   Münze und Sorte ergibt einen möglichen Maßstab in Pixel je Millimeter.
-   Gewählt wird der, bei dem alle Münzen zusammen am besten zu den
-   [offiziellen Durchmessern](https://www.ecb.europa.eu/euro/coins/common/html/index.de.html)
-   und ihrer Farbe passen. Ab sechs Münzen darf der Maßstab linear über das
-   Bild wachsen, das gleicht ein schräg gehaltenes Handy aus.
-5. **Fehltreffer verwerfen**: Kreise in Haut-, Rosa- oder Blautönen sind
-   keine Münzen (Euro-Münzen sind silbern, messing- oder kupferfarben). Kreise,
-   deren Größe zu keiner Sorte passt, etwa Knöpfe, fallen ebenfalls weg und
-   gehen nur gedeckelt in die Maßstabssuche ein.
-6. **Mehrdeutigkeit erkennen**: Passt ein deutlich anderer Maßstab fast
-   genauso gut und ergibt einen anderen Betrag, weist die App darauf hin.
+1. **Find circles** ([`detect.js`](detect.js), in a Web Worker): OpenCV.js
+   `HoughCircles` with `HOUGH_GRADIENT_ALT`. Overlapping hits are dropped in
+   favour of the larger one, so the inner ring of a 2 euro coin does not count
+   as a coin of its own.
+2. **Re-measure the rim:** Hough gives radii to within a few percent, but
+   neighbouring denominations often differ by only 5 %. So the app searches
+   the strongest edge along 90 rays and fits a circle through those points
+   (Kåsa fit) with an outlier filter.
+3. **Measure colour:** median L\*a\*b\* in the core and in the outer ring. The
+   median ignores highlights. Hue separates copper from brass; the difference
+   between core and ring identifies bimetal coins: 1 euro has a silver core,
+   2 euro a silver ring.
+4. **Estimate the scale** ([`classify.js`](classify.js)): every combination of
+   coin and denomination gives a candidate scale in pixels per millimetre. The
+   app picks the one where all coins together best match the
+   [official diameters](https://www.ecb.europa.eu/euro/coins/common/html/index.en.html)
+   and their colour. With six or more coins the scale may grow linearly across
+   the image, which compensates for a tilted phone.
+5. **Drop false detections:** circles in skin, pink or blue tones are not
+   coins (euro coins are silver, brass or copper coloured). Circles whose size
+   fits no denomination, such as buttons, are dropped as well and enter the
+   scale search only with a capped cost.
+6. **Detect ambiguity:** if a clearly different scale fits almost as well and
+   gives a different amount, the app says so.
 
-### Genauigkeit
+### Accuracy
 
-| Testmaterial                                                                         | Gefunden                  | Ergebnis                              |
-| ------------------------------------------------------------------------------------ | ------------------------- | ------------------------------------- |
-| Künstliche Fotos ([`make-fixture.py`](tools/make-fixture.py), 7 Seeds, je 20 Münzen) | 140 / 140                 | Betrag in allen 7 Fotos exakt         |
-| Echte Fotos von Wikimedia Commons (2 Fotos, schräg, teils dicht gedrängt)            | 33 / 35                   | 24 von 25 bestimmbaren Münzen richtig |
-| Echte Fotos von Wikimedia Commons (6 Fotos, auf Hand, Geldbörse, Banknoten, Flagge)  | 36 / 38, kein Fehltreffer | 32 von 34 richtig                     |
+| Test material                                                                         | Found                    | Result                               |
+| ------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------ |
+| Synthetic photos ([`make-fixture.py`](tools/make-fixture.py), 7 seeds, 20 coins each) | 140 / 140                | Exact amount in all 7 photos         |
+| Real photos from Wikimedia Commons (2 photos, at an angle, partly crowded)            | 33 / 35                  | 24 of 25 determinable coins correct  |
+| Real photos from Wikimedia Commons (6 photos, on hand, wallet, banknotes, flag)       | 36 / 38, no false hits   | 32 of 34 correct                     |
 
-Grenzen: übereinanderliegende Haufen, starke Spiegelungen, sehr dunkle oder
-farbstichige Fotos und Münzen anderer Währungen.
+Limits: stacked piles, strong reflections, very dark or colour-cast photos,
+and coins of other currencies.
 
-## Projektstruktur
+## Project structure
 
 ```
-index.html, style.css     Oberfläche
-app.js                    Ablauf, Zeichnen, Korrekturen
-worker.js                 lädt OpenCV.js und ruft detect.js im Hintergrund auf
-detect.js                 Kreissuche, Randverfeinerung, Farbmessung
-classify.js               Metall, Maßstab, Sorte, Betrag (ohne OpenCV)
-sw.js                     Service Worker für den Offline-Betrieb
-vendor/opencv.js          OpenCV.js 4.12.0 (Apache-2.0), siehe vendor/README.md
-tests/                    Unit-Tests (node:test) und Browsertest (headless Chrome)
-tools/                    Testbild-Generator und Auswertung eigener Fotos
+index.html, style.css     user interface
+app.js                    flow, drawing, corrections
+worker.js                 loads OpenCV.js and runs detect.js in the background
+detect.js                 circle search, rim refinement, colour measurement
+classify.js               metal, scale, denomination, amount (no OpenCV)
+sw.js                     service worker for offline use
+vendor/opencv.js          OpenCV.js 4.12.0 (Apache-2.0), see vendor/README.md
+tests/                    unit tests (node:test) and browser test (headless Chrome)
+tools/                    test image generator and evaluation on your own photos
 ```
 
-Kein Framework und kein Build-Schritt: die Dateien im Hauptverzeichnis werden
-unverändert ausgeliefert.
+No framework and no build step: the files in the repository root are served
+as they are.
 
-## Entwicklung
+## Development
 
-Voraussetzungen: Node.js 24 und Google Chrome. Für die Werkzeuge in `tools/`
-zusätzlich Python 3 mit NumPy und ImageMagick.
+Requirements: Node.js 24 and Google Chrome. The tools in `tools/` also need
+Python 3 with NumPy and ImageMagick.
 
 ```sh
 npm ci
 npm run serve        # http://localhost:8080
 ```
 
-| Befehl                                    | Zweck                                                                     |
-| ----------------------------------------- | ------------------------------------------------------------------------- |
-| `npm run lint`                            | Biome: Formatierung und Lint für JS, CSS, HTML und JSON                   |
-| `npm run lint:fix`                        | dasselbe mit automatischen Korrekturen                                    |
-| `npm test`                                | Unit-Tests für Klassifikation und Kreiserkennung                          |
-| `npm run test:e2e`                        | Browsertest: Foto laden, Summe prüfen, Korrektur und Offline-Cache testen |
-| `node tools/try.js foto.jpg`              | Erkennung auf eigenem Foto, schreibt `foto.out.jpg` mit Markierungen      |
-| `node tools/eval.js truth.json`           | Trefferquote gegen Sollwerte (`{"bild.jpg": [[x, y, "50c"], …]}`)         |
-| `python3 tools/make-fixture.py out.jpg 7` | künstliches Testfoto, gibt Anzahl und Betrag aus                          |
+| Command                                   | Purpose                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `npm run lint`                            | Biome: formatting and lint for JS, CSS, HTML and JSON                   |
+| `npm run lint:fix`                        | the same with automatic fixes                                           |
+| `npm test`                                | unit tests for classification and circle detection                      |
+| `npm run check`                           | lint + unit tests                                                       |
+| `npm run test:e2e`                        | browser test: load photo, check sum, correction and offline cache       |
+| `node tools/try.js photo.jpg`             | detection on your own photo, writes `photo.out.jpg` with markings       |
+| `node tools/eval.js truth.json`           | hit rate against ground truth (`{"photo.jpg": [[x, y, "50c"], ...]}`)   |
+| `python3 tools/make-fixture.py out.jpg 7` | synthetic test photo, prints count and amount                           |
 
-Die [CI](.github/workflows/ci.yml) führt Biome, Ruff, Unit-Tests und den
-Browsertest aus und veröffentlicht `main` danach auf GitHub Pages.
-Details in [CONTRIBUTING.md](CONTRIBUTING.md).
+[CI](.github/workflows/ci.yml) runs Biome, Ruff, the unit tests and the
+browser test on every push and pull request; only when they pass is `main`
+published to GitHub Pages. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-### Browser
+### Browsers
 
-Aktuelle Versionen von Chrome, Edge, Firefox und Safari, ab iOS 16.4. Die App
-braucht WebAssembly, Web Worker, `OffscreenCanvas` und `<dialog>`.
+Current versions of Chrome, Edge, Firefox and Safari, iOS 16.4 or newer. The
+app needs WebAssembly, Web Workers, `OffscreenCanvas` and `<dialog>`.
 
-## Lizenz
+## License
 
 [MIT](LICENSE) © Michael Krisper
 
-Mitgeliefert: [OpenCV.js](https://opencv.org) unter
-[Apache-2.0](vendor/LICENSE-opencv.txt). Das Foto im Screenshot stammt von
-Lukasz Kobus, Europäische Kommission,
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), über
+Bundled: [OpenCV.js](https://opencv.org) under
+[Apache-2.0](vendor/LICENSE-opencv.txt). The photo in the screenshot is by
+Lukasz Kobus, European Commission,
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), via
 [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Euro_coins_(15).jpg).
