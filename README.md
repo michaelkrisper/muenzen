@@ -83,11 +83,11 @@ flowchart LR
 
 ### Accuracy
 
-| Test material                                                                         | Found                    | Result                               |
-| ------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------ |
-| Synthetic photos ([`make-fixture.py`](tools/make-fixture.py), 7 seeds, 20 coins each) | 140 / 140                | Exact amount in all 7 photos         |
-| Real photos from Wikimedia Commons (2 photos, at an angle, partly crowded)            | 33 / 35                  | 24 of 25 determinable coins correct  |
-| Real photos from Wikimedia Commons (6 photos, on hand, wallet, banknotes, flag)       | 36 / 38, no false hits   | 32 of 34 correct                     |
+| Test material                                                                         | Found                  | Result                              |
+| ------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------- |
+| Synthetic photos ([`make-fixture.py`](tools/make-fixture.py), 7 seeds, 20 coins each) | 140 / 140              | Exact amount in all 7 photos        |
+| Real photos from Wikimedia Commons (2 photos, at an angle, partly crowded)            | 33 / 35                | 24 of 25 determinable coins correct |
+| Real photos from Wikimedia Commons (6 photos, on hand, wallet, banknotes, flag)       | 36 / 38, no false hits | 32 of 34 correct                    |
 
 Limits: stacked piles, strong reflections, very dark or colour-cast photos,
 and coins of other currencies.
@@ -119,16 +119,16 @@ npm ci
 npm run serve        # http://localhost:8080
 ```
 
-| Command                                   | Purpose                                                                 |
-| ----------------------------------------- | ----------------------------------------------------------------------- |
-| `npm run lint`                            | Biome: formatting and lint for JS, CSS, HTML and JSON                   |
-| `npm run lint:fix`                        | the same with automatic fixes                                           |
-| `npm test`                                | unit tests for classification and circle detection                      |
-| `npm run check`                           | lint + unit tests                                                       |
-| `npm run test:e2e`                        | browser test: load photo, check sum, correction and offline cache       |
-| `node tools/try.js photo.jpg`             | detection on your own photo, writes `photo.out.jpg` with markings       |
-| `node tools/eval.js truth.json`           | hit rate against ground truth (`{"photo.jpg": [[x, y, "50c"], ...]}`)   |
-| `python3 tools/make-fixture.py out.jpg 7` | synthetic test photo, prints count and amount                           |
+| Command                                   | Purpose                                                               |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| `npm run lint`                            | Biome: formatting and lint for JS, CSS, HTML and JSON                 |
+| `npm run lint:fix`                        | the same with automatic fixes                                         |
+| `npm test`                                | unit tests for classification and circle detection                    |
+| `npm run check`                           | lint + unit tests                                                     |
+| `npm run test:e2e`                        | browser test: load photo, check sum, correction and offline cache     |
+| `node tools/try.js photo.jpg`             | detection on your own photo, writes `photo.out.jpg` with markings     |
+| `node tools/eval.js truth.json`           | hit rate against ground truth (`{"photo.jpg": [[x, y, "50c"], ...]}`) |
+| `python3 tools/make-fixture.py out.jpg 7` | synthetic test photo, prints count and amount                         |
 
 [CI](.github/workflows/ci.yml) runs Biome, Ruff, the unit tests and the
 browser test on every push and pull request; only when they pass is `main`
