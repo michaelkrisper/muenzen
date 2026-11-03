@@ -4,6 +4,7 @@ Count euro coins from a photo: number of coins and total value, right in the bro
 
 [![CI](https://github.com/michaelkrisper/muenzen/actions/workflows/ci.yml/badge.svg)](https://github.com/michaelkrisper/muenzen/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js 26](https://img.shields.io/badge/node-26-339933?logo=nodedotjs&logoColor=white)](.nvmrc)
 [![Biome](https://img.shields.io/badge/code%20style-Biome-60a5fa?logo=biome&logoColor=white)](https://biomejs.dev)
 [![Live demo](https://img.shields.io/badge/demo-GitHub%20Pages-2ea44f)](https://michaelkrisper.github.io/muenzen/)
 
@@ -111,8 +112,8 @@ as they are.
 
 ## Development
 
-Requirements: Node.js 24 and Google Chrome. The tools in `tools/` also need
-Python 3 with NumPy and ImageMagick.
+Requirements: Node.js 26 (see `.nvmrc`) and Google Chrome. The tools in
+`tools/` also need Python 3 with NumPy and ImageMagick.
 
 ```sh
 npm ci

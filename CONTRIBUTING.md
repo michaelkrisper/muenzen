@@ -4,7 +4,7 @@ Bug reports, photos with misdetections and pull requests are welcome.
 
 ## Setup
 
-Requirements: Node.js 24, Google Chrome (for the browser test), and for the
+Requirements: Node.js 26 (see `.nvmrc`), Google Chrome (for the browser test), and for the
 tools in `tools/` also Python 3 with NumPy and ImageMagick.
 
 ```sh
