@@ -102,10 +102,10 @@ app.js                    flow, drawing, corrections
 worker.js                 loads OpenCV.js and runs detect.js in the background
 detect.js                 circle search, rim refinement, colour measurement
 classify.js               metal, scale, denomination, amount (no OpenCV)
-sw.js                     service worker for offline use
+sw.js                     service worker for offline use (cache names stamped on deploy)
 vendor/opencv.js          OpenCV.js 4.12.0 (Apache-2.0), see vendor/README.md
 tests/                    unit tests (node:test) and browser test (headless Chrome)
-tools/                    test image generator and evaluation on your own photos
+tools/                    test image generator, evaluation on your own photos, sw.js stamp
 ```
 
 No framework and no build step: the files in the repository root are served

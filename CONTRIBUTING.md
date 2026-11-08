@@ -48,8 +48,10 @@ CI runs the same steps, plus Ruff for `tools/*.py`.
 
 ## Notes
 
-- Changes to app files: bump `VERSION` in `sw.js`, otherwise the service
-  worker keeps serving the old version.
+- The service worker's cache names are stamped with a content hash of their
+  files on deploy (`tools/stamp-sw.mjs`), so there is nothing to bump. A new
+  file the app needs offline goes into `SHELL` in `sw.js`, or into `ASSETS`
+  if it is a large vendor file.
 - Check changes to detection with `tools/eval.js` against your own photos
   with ground truth and give the before/after numbers in the pull request.
 - No photos by other authors in the repository; tests use
