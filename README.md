@@ -3,6 +3,7 @@
 Count euro coins from a photo: number of coins and total value, right in the browser.
 
 [![CI](https://github.com/michaelkrisper/muenzen/actions/workflows/ci.yml/badge.svg)](https://github.com/michaelkrisper/muenzen/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/github/v/tag/michaelkrisper/muenzen?sort=semver&label=version)](https://github.com/michaelkrisper/muenzen/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js 26](https://img.shields.io/badge/node-26-339933?logo=nodedotjs&logoColor=white)](.nvmrc)
 [![Biome](https://img.shields.io/badge/code%20style-Biome-60a5fa?logo=biome&logoColor=white)](https://biomejs.dev)
@@ -133,7 +134,9 @@ npm run serve        # http://localhost:8080
 
 [CI](.github/workflows/ci.yml) runs Biome, Ruff, the unit tests and the
 browser test on every push and pull request; only when they pass is `main`
-published to GitHub Pages. See [CONTRIBUTING.md](CONTRIBUTING.md).
+published to GitHub Pages. Every merge to `main` is tagged with the next
+patch version; bundled releases with release notes come from the Release
+workflow. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Browsers
 
