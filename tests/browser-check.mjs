@@ -63,7 +63,8 @@ class Tab {
   errors = [];
 
   static async open(url) {
-    for (let i = 0; i < 50; i++) {
+    // A cold Chrome start on a shared CI runner occasionally takes over 10 s.
+    for (let i = 0; i < 150; i++) {
       try {
         const res = await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(url)}`, {
           method: 'PUT',
@@ -75,7 +76,7 @@ class Tab {
         await wait(200);
       }
     }
-    throw new Error('Chrome does not respond');
+    throw new Error('Chrome does not respond within 30 s');
   }
 
   #connect(url) {
