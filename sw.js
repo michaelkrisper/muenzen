@@ -1,13 +1,14 @@
 // Precache everything; after that the app needs no network.
-// Bump VERSION whenever any of these files changes.
-const VERSION = 'v4';
+// Two caches: the small app shell and the large vendor files (OpenCV.js,
+// 11 MB). On deploy, CI replaces the "dev" in each name with a content hash of
+// that cache's files (tools/stamp-sw.mjs). A cache thus gets a new name exactly
+// when one of its files changes, and an app update keeps OpenCV.js.
+const SHELL_CACHE = 'muenzen-shell-dev';
+const ASSETS_CACHE = 'muenzen-assets-dev';
 // All apps on michaelkrisper.github.io share one origin and thus one
-// CacheStorage, so the cache name carries the app's prefix and cleanup only
-// touches this app's caches (plus the unprefixed 'vN' names used up to v3).
+// CacheStorage, so cleanup only touches caches with this app's prefix.
 const PREFIX = 'muenzen-';
-const CACHE = PREFIX + VERSION;
-const LEGACY = /^v[1-3]$/;
-const FILES = [
+const SHELL = [
   './',
   'index.html',
   'style.css',
@@ -15,19 +16,27 @@ const FILES = [
   'classify.js',
   'detect.js',
   'worker.js',
-  'vendor/opencv.js',
   'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
 ];
+const ASSETS = ['vendor/opencv.js'];
+
+// Fetches only what a cache of the same name does not hold yet, past the HTTP
+// cache, so a new cache name never stores an outdated file.
+const fill = (name, files) =>
+  caches
+    .open(name)
+    .then((cache) =>
+      Promise.all(
+        files.map(async (f) => (await cache.match(f)) || cache.add(new Request(f, { cache: 'reload' }))),
+      ),
+    );
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches
-      .open(CACHE)
-      .then((c) => c.addAll(FILES))
-      .then(() => self.skipWaiting()),
+    Promise.all([fill(SHELL_CACHE, SHELL), fill(ASSETS_CACHE, ASSETS)]).then(() => self.skipWaiting()),
   );
 });
 
@@ -38,7 +47,7 @@ self.addEventListener('activate', (e) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((k) => (k.startsWith(PREFIX) && k !== CACHE) || LEGACY.test(k))
+            .filter((k) => k.startsWith(PREFIX) && k !== SHELL_CACHE && k !== ASSETS_CACHE)
             .map((k) => caches.delete(k)),
         ),
       )

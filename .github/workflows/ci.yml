@@ -55,11 +55,16 @@ jobs:
       url: ${{ steps.pages.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # The service worker's cache names get a content hash of their files.
       - name: Assemble site
         run: |
           mkdir _site
           cp -r index.html style.css app.js classify.js detect.js worker.js sw.js \
             manifest.webmanifest icons vendor _site/
+          node tools/stamp-sw.mjs _site
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
