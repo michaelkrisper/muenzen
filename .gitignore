@@ -1,3 +1,4 @@
 *.out.jpg
 _site/
 node_modules/
+CLAUDE.local.md
