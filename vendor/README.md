@@ -12,4 +12,5 @@ tar xzf techstark-opencv-js-*.tgz package/dist/opencv.js
 mv package/dist/opencv.js vendor/opencv.js
 ```
 
-Danach `VERSION` in `sw.js` hochzählen und `npm test` laufen lassen.
+Danach `npm test` laufen lassen. Die Cache-Namen in `sw.js` stempelt CI beim Deploy
+mit einem Inhalts-Hash; hochzählen ist nicht nötig.
