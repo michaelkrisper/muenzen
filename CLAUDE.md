@@ -54,7 +54,8 @@ same files with rsync to the own server (https://muenzen.krisperapps.de/).
   code change downloads the shell (~160 KB), not OpenCV.js again.
 - A new file the app needs: add it to `SHELL` (or `ASSETS` for large vendor files) and
   to the `cp` list of the "Assemble site" step in both deploy jobs ("GitHub Pages" and
-  "krisperapps.de"), which publish only the listed files. `tests/stamp-sw.test.mjs` fails if a listed file does not exist.
+  "krisperapps.de"), which publish only the listed files. `tests/stamp-sw.test.mjs`
+  fails if a listed file does not exist.
 - michaelkrisper.github.io is shared with other apps, and so is CacheStorage: every
   cache name starts with `muenzen-` and activate deletes only outdated `muenzen-`
   caches. Never delete caches by any other pattern.
