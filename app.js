@@ -375,6 +375,10 @@ $('share').addEventListener('click', async () => {
   }
 });
 
+// --- Version ----------------------------------------------------------------
+
+$('version').textContent = `Version ${APP_VERSION}`;
+
 // --- Offline ----------------------------------------------------------------
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

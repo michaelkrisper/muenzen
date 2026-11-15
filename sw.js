@@ -12,6 +12,7 @@ const SHELL = [
   './',
   'index.html',
   'style.css',
+  'version.js',
   'app.js',
   'classify.js',
   'detect.js',
