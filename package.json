@@ -2,7 +2,7 @@
   "name": "muenzen",
   "version": "1.0.0",
   "description": "Count euro coins from a photo: number and total value, as an installable web app right in the browser",
-  "homepage": "https://michaelkrisper.github.io/muenzen/",
+  "homepage": "https://muenzen.krisperapps.de/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/michaelkrisper/muenzen.git"

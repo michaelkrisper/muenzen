@@ -7,9 +7,9 @@ Count euro coins from a photo: number of coins and total value, right in the bro
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js 26](https://img.shields.io/badge/node-26-339933?logo=nodedotjs&logoColor=white)](.nvmrc)
 [![Biome](https://img.shields.io/badge/code%20style-Biome-60a5fa?logo=biome&logoColor=white)](https://biomejs.dev)
-[![Live demo](https://img.shields.io/badge/demo-GitHub%20Pages-2ea44f)](https://michaelkrisper.github.io/muenzen/)
+[![Live demo](https://img.shields.io/badge/demo-live-2ea44f)](https://muenzen.krisperapps.de/)
 
-**Live: https://michaelkrisper.github.io/muenzen/**
+**Live: https://muenzen.krisperapps.de/**
 
 The app finds the coins in the image, determines each denomination and shows
 count and total, all on the device without any upload. It is an installable
@@ -134,7 +134,7 @@ npm run serve        # http://localhost:8080
 
 [CI](.github/workflows/ci.yml) runs Biome, Ruff, the unit tests and the
 browser test on every push and pull request; only when they pass is `main`
-published to GitHub Pages. Every merge to `main` is tagged with the next
+published to https://muenzen.krisperapps.de/. Every merge to `main` is tagged with the next
 patch version; bundled releases with release notes come from the Release
 workflow. See [CONTRIBUTING.md](CONTRIBUTING.md).
 

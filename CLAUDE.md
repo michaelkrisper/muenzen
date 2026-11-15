@@ -3,8 +3,8 @@
 Münzzähler: installable web app that counts euro coins in a photo and shows count,
 total and a breakdown, entirely on the device. Vanilla JS, no framework, no build
 step: the files in the repo root are served as they are. Detection runs OpenCV.js
-(`vendor/opencv.js`, 4.12, ~11 MB) in a Web Worker. CI publishes to GitHub Pages
-(https://michaelkrisper.github.io/muenzen/). UI German.
+(`vendor/opencv.js`, 4.12, ~11 MB) in a Web Worker. CI publishes to the own server
+(https://muenzen.krisperapps.de/). UI German.
 
 ## Commands
 
@@ -26,9 +26,9 @@ node tools/stamp-sw.mjs _site  # stamps sw.js cache names (CI does this on deplo
 ```
 
 `ci.yml` job "Lint and tests" runs `npx biome ci`, Ruff, `npm test` and
-`npm run test:e2e`; on `main` the "Version tag" job tags, then "GitHub Pages" copies
-the app files into `_site/`, stamps `sw.js` and deploys; "krisperapps.de" uploads the
-same files with rsync to the own server (https://muenzen.krisperapps.de/).
+`npm run test:e2e`; on `main` the "Version tag" job tags, then "krisperapps.de"
+copies the app files into `_site/`, stamps `sw.js` and uploads them with rsync to the
+own server (https://muenzen.krisperapps.de/).
 
 ## Architecture
 
@@ -53,12 +53,12 @@ same files with rsync to the own server (https://muenzen.krisperapps.de/).
 - Install fetches only what a cache of the same name lacks (`cache: 'reload'`), so a
   code change downloads the shell (~160 KB), not OpenCV.js again.
 - A new file the app needs: add it to `SHELL` (or `ASSETS` for large vendor files) and
-  to the `cp` list of the "Assemble site" step in both deploy jobs ("GitHub Pages" and
-  "krisperapps.de"), which publish only the listed files. `tests/stamp-sw.test.mjs`
+  to the `cp` list of the "Assemble site" step in the deploy job ("krisperapps.de"),
+  which publishes only the listed files. `tests/stamp-sw.test.mjs`
   fails if a listed file does not exist.
-- michaelkrisper.github.io is shared with other apps, and so is CacheStorage: every
-  cache name starts with `muenzen-` and activate deletes only outdated `muenzen-`
-  caches. Never delete caches by any other pattern.
+- Every cache name starts with `muenzen-` and activate deletes only outdated
+  `muenzen-` caches (the app used to share an origin, and thus CacheStorage, with
+  other apps). Never delete caches by any other pattern.
 
 ## Conventions
 
@@ -90,5 +90,5 @@ same files with rsync to the own server (https://muenzen.krisperapps.de/).
 - PRs auto-merge (squash) once CI and the "Linked ticket" check pass; drafts are not merged.
 - Versions exist only as git tags `vX.Y.Z`. Every merge to `main` tags the next patch;
   never edit version numbers in files. Minor/major releases: Actions -> Release.
-- Merging to `main` deploys to GitHub Pages and to krisperapps.de automatically (CI workflow).
+- Merging to `main` deploys to krisperapps.de automatically (CI workflow).
 - Details: CONTRIBUTING.md.
