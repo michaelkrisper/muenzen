@@ -145,6 +145,11 @@ try {
   // The repository holds the placeholder; the deploy writes the release tag.
   const version = await tab.eval(`document.getElementById('version').textContent`);
   check(version === 'dev', `footer shows the version (${version})`);
+  // Shutter (live viewfinder) and capture (file input) replace each other.
+  const takers = await tab.eval(
+    `['shutter', 'capture'].filter((id) => document.getElementById(id).offsetParent !== null).length`,
+  );
+  check(takers === 1, `one "Foto aufnehmen" button visible (${takers})`);
 
   const { root: doc } = await tab.send('DOM.getDocument');
   const { nodeId } = await tab.send('DOM.querySelector', {
