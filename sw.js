@@ -5,8 +5,8 @@
 // when one of its files changes, and an app update keeps OpenCV.js.
 const SHELL_CACHE = 'muenzen-shell-dev';
 const ASSETS_CACHE = 'muenzen-assets-dev';
-// All apps on michaelkrisper.github.io share one origin and thus one
-// CacheStorage, so cleanup only touches caches with this app's prefix.
+// Cleanup only touches caches with this app's prefix (the app used to share
+// an origin, and thus one CacheStorage, with other apps).
 const PREFIX = 'muenzen-';
 const SHELL = [
   './',

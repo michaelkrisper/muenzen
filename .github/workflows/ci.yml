@@ -1,7 +1,7 @@
 name: CI
 
 # Checks every push and pull request (lint, unit tests, browser test) and
-# then publishes main to GitHub Pages and to krisperapps.de.
+# then publishes main to krisperapps.de.
 
 on:
   push:
@@ -38,43 +38,11 @@ jobs:
       # tools/make-fixture.py (seed 1). Chrome is preinstalled on the runner.
       - run: npm run test:e2e
 
-  deploy:
-    name: GitHub Pages
-    # Only commits that got a version tag: a re-run of an older run deploys nothing.
-    needs: [check, version]
-    if: needs.version.outputs.version != ''
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    concurrency:
-      group: pages
-      cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.pages.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-      # The service worker's cache names get a content hash of their files.
-      - name: Assemble site
-        run: |
-          mkdir _site
-          cp -r index.html style.css app.js classify.js detect.js worker.js sw.js \
-            manifest.webmanifest icons vendor _site/
-          node tools/stamp-sw.mjs _site
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: _site
-      - id: pages
-        uses: actions/deploy-pages@v5
-
-  # The same files on the own server. The key may only write into this app's
+  # Publishes to the own server. The key may only write into this app's
   # folder there, so this job runs nothing but checkout, assembly and rsync.
   server:
     name: krisperapps.de
+    # Only commits that got a version tag: a re-run of an older run deploys nothing.
     needs: [check, version]
     if: needs.version.outputs.version != ''
     runs-on: ubuntu-latest
@@ -86,6 +54,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
+      # The service worker's cache names get a content hash of their files.
       - name: Assemble site
         run: |
           mkdir _site
