@@ -56,6 +56,9 @@ own server (https://muenzen.krisperapps.de/).
   to the `cp` list of the "Assemble site" step in the deploy job ("krisperapps.de"),
   which publishes only the listed files. `tests/stamp-sw.test.mjs`
   fails if a listed file does not exist.
+- `version.js` (`APP_VERSION`, shown in the footer) holds `dev`; the "Assemble site"
+  step writes the release tag into it before stamping. It belongs to `SHELL`, so every
+  release renames the shell cache, never the assets cache.
 - Every cache name starts with `muenzen-` and activate deletes only outdated
   `muenzen-` caches (the app used to share an origin, and thus CacheStorage, with
   other apps). Never delete caches by any other pattern.

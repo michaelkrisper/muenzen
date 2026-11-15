@@ -54,12 +54,16 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-      # The service worker's cache names get a content hash of their files.
+      # version.js gets the release tag (shown in the app), then the service
+      # worker's cache names get a content hash of their files.
       - name: Assemble site
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           mkdir _site
-          cp -r index.html style.css app.js classify.js detect.js worker.js sw.js \
+          cp -r index.html style.css version.js app.js classify.js detect.js worker.js sw.js \
             manifest.webmanifest icons vendor _site/
+          printf "self.APP_VERSION = '%s';\n" "${VERSION#v}" > _site/version.js
           node tools/stamp-sw.mjs _site
       - name: Upload
         env:

@@ -46,6 +46,7 @@
       "includes": ["*.js"],
       "javascript": {
         "globals": [
+          "APP_VERSION",
           "COINS",
           "COIN_BY_ID",
           "classify",
