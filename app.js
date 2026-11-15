@@ -377,7 +377,7 @@ $('share').addEventListener('click', async () => {
 
 // --- Version ----------------------------------------------------------------
 
-$('version').textContent = `Version ${APP_VERSION}`;
+$('version').textContent = APP_VERSION === 'dev' ? 'dev' : `v${APP_VERSION}`;
 
 // --- Offline ----------------------------------------------------------------
 

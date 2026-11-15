@@ -144,7 +144,7 @@ try {
   check(true, 'recognition engine loaded');
   // The repository holds the placeholder; the deploy writes the release tag.
   const version = await tab.eval(`document.getElementById('version').textContent`);
-  check(version === 'Version dev', `footer shows the version (${version})`);
+  check(version === 'dev', `footer shows the version (${version})`);
 
   const { root: doc } = await tab.send('DOM.getDocument');
   const { nodeId } = await tab.send('DOM.querySelector', {
