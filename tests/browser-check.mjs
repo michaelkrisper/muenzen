@@ -145,6 +145,12 @@ try {
   // The repository holds the placeholder; the deploy writes the release tag.
   const version = await tab.eval(`document.getElementById('version').textContent`);
   check(version === 'dev', `footer shows the version (${version})`);
+  const legal = await tab.eval(`[...document.querySelectorAll('footer a')].map((a) => a.href).join(' ')`);
+  check(
+    legal ===
+      'https://krisperapps.de/impressum https://krisperapps.de/datenschutz#muenzen https://krisperapps.de/nutzung',
+    'footer links the legal pages',
+  );
   // Shutter (live viewfinder) and capture (file input) replace each other.
   const takers = await tab.eval(
     `['shutter', 'capture'].filter((id) => document.getElementById(id).offsetParent !== null).length`,
