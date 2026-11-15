@@ -95,6 +95,9 @@ footer {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+.btn[hidden] {
+  display: none;
+}
 .btn:active {
   transform: scale(0.98);
 }
@@ -251,7 +254,4 @@ dialog h2 {
 .dialog-actions .btn {
   flex: 1;
   min-height: 2.6rem;
-}
-.dialog-actions .btn[hidden] {
-  display: none;
 }
